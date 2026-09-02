@@ -1,0 +1,14 @@
+# build output, dependencies and IDE files
+target/
+node_modules/
+dist/
+.next/
+.idea/
+*.iml
+.claude/
+.env
+.env.*
+!.env.example
+# the development server: its address, and the ssh key
+bootstrap/dev/deploy.config.json
+*.pem

@@ -1,0 +1,13 @@
+{
+  "name": "moneypot-monorepo",
+  "private": true,
+  "description": "MoneyPot: a savings-pot (kameti) platform. The server is a Java platform, the client is SDKs and a Next.js app",
+  "packageManager": "pnpm@11.4.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test"
+  }
+}

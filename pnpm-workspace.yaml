@@ -1,0 +1,4 @@
+packages:
+  - client/service-sdk/*
+  - client/packages/*
+  - client/apps/*
