@@ -1,0 +1,2 @@
+com.moneypot.security.jwt.JwtAuthAutoConfiguration
+com.moneypot.security.SecurityAutoConfiguration
