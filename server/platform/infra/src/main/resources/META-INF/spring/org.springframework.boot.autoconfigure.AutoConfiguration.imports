@@ -1,0 +1,3 @@
+com.moneypot.infra.client.rabbit.RabbitClientConfiguration
+com.moneypot.infra.adapter.outbox.RabbitOutboxAdapterConfiguration
+com.moneypot.infra.adapter.inbox.RabbitInboxAdapterConfiguration

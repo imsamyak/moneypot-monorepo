@@ -1,0 +1,18 @@
+# Where the clients live when the "local" profile is active: Docker containers on this machine.
+# Only "where": which client a module uses is the service's decision (moneypot.outbox.client: rabbit.core).
+# Every name defined here must also exist in the other profiles' files.
+# Loaded at the lowest priority, so the service's own configuration overrides anything here.
+# Only non-secret values belong in these files.
+moneypot:
+  client:
+    rabbit:
+      core:
+        # The local container by default. To develop against a hosted broker (for example CloudAMQP) put RABBITMQ_HOST,
+        # RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD, RABBITMQ_VHOST and RABBITMQ_SSL=true in the repo-root .env,
+        # which dev-service.ps1 passes on. guest/guest is the container's built-in account and only works from this machine.
+        host: ${RABBITMQ_HOST:localhost}
+        port: ${RABBITMQ_PORT:5673}
+        username: ${RABBITMQ_USERNAME:guest}
+        password: ${RABBITMQ_PASSWORD:guest}
+        virtual-host: ${RABBITMQ_VHOST:/}
+        ssl: ${RABBITMQ_SSL:false}
