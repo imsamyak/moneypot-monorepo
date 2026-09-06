@@ -1,0 +1,46 @@
+# The resources a service needs when it runs with --spring.profiles.active=local, as official images.
+# The published ports are a contract with infra/src/main/resources/moneypot-infra-local.yml: change one, change the other.
+# The ports differ from the shop's (5433, 5673) so both projects can run on one machine.
+# Start and stop with local.ps1 (up | down | reset | status).
+name: moneypot-local
+
+services:
+  # moneypot.client.rabbit.core -> localhost:5673 (login guest/guest, which RabbitMQ only accepts from this machine).
+  # The management UI is on http://localhost:15673. Exchanges and queues are declared by the services.
+  rabbitmq:
+    image: rabbitmq:${RABBITMQ_TAG}
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+
+  # The services' databases (spring.datasource.* in each service's application-local.yml): localhost:5433, user and
+  # password "moneypot". POSTGRES_DB creates identity_db on first start; the other databases come from postgres-init/.
+  postgres:
+    image: postgres:${POSTGRES_TAG}
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: moneypot
+      POSTGRES_PASSWORD: moneypot
+      POSTGRES_DB: identity_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moneypot -d identity_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
