@@ -83,7 +83,7 @@ public class DomainEventRegistry {
    }
 
    /**
-     * Dmoneypotposes class into aggregate and action, and registers reverse mapping.
+     * Decomposes class into aggregate and action, and registers reverse mapping.
      */
    private DomainEventSignature computeAndRegister(Class<? extends DomainEvent> targetClazz) {
       validateClassStructure(targetClazz);

@@ -1,9 +1,11 @@
 /**
  * Messaging contracts, event schemas, and payload specifications.
  * <p>
- * Every event carries the {@code version} of its aggregate after the change. The producer takes it from the entity
- * it just saved, so versions of one aggregate only grow. A consumer that builds a view from events keeps the highest
- * version it has applied per aggregate and ignores anything not newer, which makes duplicates and out-of-order delivery
- * harmless. Events that remove an aggregate ({@code Deleted}) are final and are applied whatever their version.
+ * Events are nested records of an aggregate interface ({@code Pot.Created}, {@code Wallet.TransferCompleted}); the
+ * interface name is the aggregate and the record name is the action. Money is always in paise (a {@code long}).
+ * <p>
+ * The pot and the wallet talk in request and answer pairs: {@code Pot.TransferRequested} asks the wallet to move money
+ * and {@code Wallet.TransferCompleted} / {@code Wallet.TransferRejected} answer it with the same reference. Every
+ * consumer is idempotent, so a duplicate or replayed event changes nothing.
  */
 package com.moneypot.contract;

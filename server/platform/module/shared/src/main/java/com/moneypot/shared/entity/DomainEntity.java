@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 
 /**
  * Base class for every persisted domain entity.
- * Its fields bmoneypote columns on the table of each subclass; it has no table of its own.
+ * Its fields become columns on the table of each subclass; it has no table of its own.
  * Provides optimistic locking, soft delete and created/modified timestamps.
  */
 @MappedSuperclass

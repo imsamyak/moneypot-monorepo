@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Declaring queues and running the listener container is spring-amqp's job; these tests cover what the adapter itself
- * decides: how a message bmoneypotes an inbox call, when it is retried, and when it is moved to the dead-letter queue.
+ * decides: how a message becomes an inbox call, when it is retried, and when it is moved to the dead-letter queue.
  */
 class RabbitInboxConsumerTest {
 
