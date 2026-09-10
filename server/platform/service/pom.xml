@@ -18,6 +18,8 @@
 
     <modules>
         <module>identity</module>
+        <module>wallet</module>
+        <module>pot</module>
     </modules>
 
 </project>
