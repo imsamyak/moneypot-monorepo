@@ -1,0 +1,25 @@
+# Runs against the containers from bootstrap/local (bootstrap/local/local.ps1 up).
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/wallet_db}
+    username: ${SPRING_DATASOURCE_USERNAME:moneypot}
+    password: ${SPRING_DATASOURCE_PASSWORD:moneypot}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+wallet:
+  deposit:
+    # A development top-up so members have money to put in a pot. Never enable it where real money is involved.
+    enabled: true
+
+moneypot:
+  security:
+    jwt:
+      jwks-uri: ${IDENTITY_JWKS_URI:http://localhost:9086/api/.well-known/jwks.json}
+  # The events this service publishes and the ones it listens to both go through the RabbitMQ client the profile
+  # calls "core"; infra says where it is.
+  outbox:
+    client: rabbit.core
+  inbox:
+    client: rabbit.core

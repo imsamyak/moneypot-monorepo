@@ -1,0 +1,24 @@
+server:
+  port: ${PORT:9081}
+
+spring:
+  application:
+    name: wallet
+  profiles:
+    # The profile also selects which moneypot-infra-<profile>.yml says where RabbitMQ is.
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  jpa:
+    open-in-view: false
+    show-sql: false
+
+outbox:
+  poll-interval-ms: 1000
+  relay:
+    batch-size: 50
+    lease-seconds: 30
+
+moneypot:
+  security:
+    jwt:
+      # Tokens are signed by the identity service; this service only verifies them.
+      issuer: ${JWT_ISSUER:moneypot-identity}
