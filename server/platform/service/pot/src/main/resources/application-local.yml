@@ -1,0 +1,20 @@
+# Runs against the containers from bootstrap/local (bootstrap/local/local.ps1 up).
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/pot_db}
+    username: ${SPRING_DATASOURCE_USERNAME:moneypot}
+    password: ${SPRING_DATASOURCE_PASSWORD:moneypot}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+moneypot:
+  security:
+    jwt:
+      jwks-uri: ${IDENTITY_JWKS_URI:http://localhost:9086/api/.well-known/jwks.json}
+  # The events this service publishes and the ones it listens to both go through the RabbitMQ client the profile
+  # calls "core"; infra says where it is.
+  outbox:
+    client: rabbit.core
+  inbox:
+    client: rabbit.core
