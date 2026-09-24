@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:pot_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+# No moneypot.outbox.client / moneypot.inbox.client here: nothing is published and nothing is consumed from RabbitMQ.
+# The tests play the wallet themselves: they read the transfers the pot asked for from the outbox table and answer
+# them through the inbox.
+outbox:
+  relay:
+    enabled: false
+
+pot:
+  settlement:
+    enabled: false
