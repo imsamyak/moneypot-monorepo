@@ -14,7 +14,6 @@ identity:
   jwt:
     issuer: moneypot-identity
     access-ttl-seconds: 3600
-    service-ttl-seconds: 300
   lockout:
     max-attempts: 5
     lock-seconds: 900

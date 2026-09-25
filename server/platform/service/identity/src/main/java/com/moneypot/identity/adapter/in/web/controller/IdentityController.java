@@ -1,26 +1,18 @@
 package com.moneypot.identity.adapter.in.web.controller;
 
-import com.moneypot.identity.adapter.in.web.controller.dto.request.CreateSellerRequest;
 import com.moneypot.identity.adapter.in.web.controller.dto.request.ForgotPasswordRequest;
 import com.moneypot.identity.adapter.in.web.controller.dto.request.LoginRequest;
 import com.moneypot.identity.adapter.in.web.controller.dto.request.RegisterRequest;
 import com.moneypot.identity.adapter.in.web.controller.dto.request.ResetPasswordRequest;
-import com.moneypot.identity.adapter.in.web.controller.dto.request.ServiceTokenRequest;
-import com.moneypot.identity.adapter.in.web.controller.dto.response.ServiceTokenResponse;
 import com.moneypot.identity.adapter.in.web.controller.dto.response.SessionResponse;
 import com.moneypot.identity.adapter.in.web.controller.dto.response.UserResponse;
-import com.moneypot.identity.port.in.usecase.CreateUserUseCase;
 import com.moneypot.identity.port.in.usecase.ForgotPasswordUseCase;
 import com.moneypot.identity.port.in.usecase.GetCurrentUserUseCase;
-import com.moneypot.identity.port.in.usecase.IssueServiceTokenUseCase;
 import com.moneypot.identity.port.in.usecase.LoginUseCase;
 import com.moneypot.identity.port.in.usecase.RegisterMemberUseCase;
-import com.moneypot.identity.port.in.usecase.RegisterSellerUseCase;
 import com.moneypot.identity.port.in.usecase.ResetPasswordUseCase;
 import com.moneypot.identity.port.in.usecase.dto.query.GetCurrentUserQuery;
 import com.moneypot.security.Caller;
-import com.moneypot.security.RequireRole;
-import com.moneypot.security.UserRole;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -40,11 +32,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class IdentityController {
 
    private final RegisterMemberUseCase registerMemberUseCase;
-   private final RegisterSellerUseCase registerSellerUseCase;
    private final LoginUseCase loginUseCase;
-   private final CreateUserUseCase createUserUseCase;
    private final GetCurrentUserUseCase getCurrentUserUseCase;
-   private final IssueServiceTokenUseCase issueServiceTokenUseCase;
    private final ForgotPasswordUseCase forgotPasswordUseCase;
    private final ResetPasswordUseCase resetPasswordUseCase;
 
@@ -52,13 +41,6 @@ public class IdentityController {
    @ResponseStatus(HttpStatus.CREATED)
    public SessionResponse register(@Valid @RequestBody RegisterRequest request) {
       return SessionResponse.from(registerMemberUseCase.execute(request.toCommand()));
-   }
-
-   /** Anyone can sign up as a seller; the seller id in the token is created with the account. */
-   @PostMapping("/auth/register/seller")
-   @ResponseStatus(HttpStatus.CREATED)
-   public SessionResponse registerSeller(@Valid @RequestBody RegisterRequest request) {
-      return SessionResponse.from(registerSellerUseCase.execute(request.toSellerCommand()));
    }
 
    @PostMapping("/auth/login")
@@ -94,21 +76,6 @@ public class IdentityController {
    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
       resetPasswordUseCase.execute(request.toCommand());
       return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
-   }
-
-   @PostMapping("/auth/admin/sellers")
-   @RequireRole(UserRole.ROLE_ADMIN)
-   @ResponseStatus(HttpStatus.CREATED)
-   public UserResponse createSeller(@Valid @RequestBody CreateSellerRequest request) {
-      return UserResponse.from(createUserUseCase.execute(request.toCommand()));
-   }
-
-   /**
-    * Client credentials for internal services (for example checkout calling inventory).
-    */
-   @PostMapping("/auth/token")
-   public ResponseEntity<ServiceTokenResponse> serviceToken(@Valid @RequestBody ServiceTokenRequest request) {
-      return noStore(ServiceTokenResponse.from(issueServiceTokenUseCase.execute(request.toCommand())));
    }
 
    private static <T> ResponseEntity<T> noStore(T body) {

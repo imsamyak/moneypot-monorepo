@@ -14,5 +14,3 @@ identity:
   password-reset:
     # No mail sender is wired yet, so the link is logged to let a reset be tried by hand. Never enable this elsewhere.
     log-links: true
-  service-clients:
-    checkout-service: ${CHECKOUT_CLIENT_SECRET:dev-checkout-client-secret}

@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * A person who can sign in. A seller's seller id is their user id, so ownership checks elsewhere need no mapping.
+ * A person who can sign in: a member of MoneyPot, or an administrator.
  */
 public class User {
 
@@ -70,8 +70,7 @@ public class User {
    }
 
    public UserPrincipal toPrincipal() {
-      String sellerId = role == UserRole.ROLE_SELLER ? id.toString() : null;
-      return UserPrincipal.of(id.toString(), email, role, sellerId);
+      return UserPrincipal.of(id.toString(), email, role);
    }
 
    public UUID id() {

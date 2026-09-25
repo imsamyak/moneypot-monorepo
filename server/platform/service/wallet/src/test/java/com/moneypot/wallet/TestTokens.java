@@ -31,6 +31,6 @@ public final class TestTokens {
    }
 
    private static String token(UserRole role, UUID userId) {
-      return SIGNER.sign(UserPrincipal.of(userId.toString(), "test@example.com", role, null), Duration.ofMinutes(5));
+      return SIGNER.sign(UserPrincipal.of(userId.toString(), "test@example.com", role), Duration.ofMinutes(5));
    }
 }

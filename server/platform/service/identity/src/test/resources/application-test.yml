@@ -16,5 +16,3 @@ identity:
     max-attempts: 3
   password-reset:
     link-base-url: http://storefront.test/reset-password
-  service-clients:
-    checkout-service: test-client-secret

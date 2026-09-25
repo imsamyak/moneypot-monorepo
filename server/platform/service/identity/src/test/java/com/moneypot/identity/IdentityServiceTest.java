@@ -5,11 +5,9 @@ import com.moneypot.identity.domain.PasswordResetToken;
 import com.moneypot.identity.domain.User;
 import com.moneypot.identity.port.in.usecase.dto.command.CreateUserCmd;
 import com.moneypot.identity.port.in.usecase.dto.command.ForgotPasswordCmd;
-import com.moneypot.identity.port.in.usecase.dto.command.IssueServiceTokenCmd;
 import com.moneypot.identity.port.in.usecase.dto.command.LoginCmd;
 import com.moneypot.identity.port.in.usecase.dto.command.RegisterMemberCmd;
 import com.moneypot.identity.port.in.usecase.dto.command.ResetPasswordCmd;
-import com.moneypot.identity.port.in.usecase.dto.result.ServiceTokenResult;
 import com.moneypot.identity.port.in.usecase.dto.result.SessionResult;
 import com.moneypot.identity.port.in.usecase.dto.result.UserResult;
 import com.moneypot.identity.port.out.PasswordHasher;
@@ -18,7 +16,6 @@ import com.moneypot.identity.port.out.PasswordResetStore;
 import com.moneypot.identity.port.out.UserStore;
 import com.moneypot.identity.service.CreateUserService;
 import com.moneypot.identity.service.ForgotPasswordService;
-import com.moneypot.identity.service.IssueServiceTokenService;
 import com.moneypot.identity.service.LoginService;
 import com.moneypot.identity.service.RegisterMemberService;
 import com.moneypot.identity.service.ResetPasswordService;
@@ -171,23 +168,15 @@ class IdentityServiceTest {
     * The use cases under test, with short names so each scenario reads as one line per step.
     */
    record Flows(RegisterMemberService registerMember, LoginService loginService, CreateUserService createUser,
-                IssueServiceTokenService serviceTokens, ForgotPasswordService forgotPassword,
+                ForgotPasswordService forgotPassword,
                 ResetPasswordService resetPassword) {
 
       SessionResult register(String email, String password) {
          return registerMember.execute(new RegisterMemberCmd(email, password));
       }
 
-      UserResult createSeller(String email, String password) {
-         return createUser.execute(new CreateUserCmd(email, password, UserRole.ROLE_SELLER));
-      }
-
       SessionResult login(String email, String password) {
          return loginService.execute(new LoginCmd(email, password));
-      }
-
-      ServiceTokenResult serviceToken(String clientId, String clientSecret) {
-         return serviceTokens.execute(new IssueServiceTokenCmd(clientId, clientSecret));
       }
 
       void forgot(String email) {
@@ -210,10 +199,9 @@ class IdentityServiceTest {
    @BeforeEach
    void setUp() {
       IdentityProperties properties = new IdentityProperties(
-         new IdentityProperties.Jwt(null, null, "moneypot-identity", 600, 300),
+         new IdentityProperties.Jwt(null, null, "moneypot-identity", 600),
          new IdentityProperties.Lockout(3, 900),
-         new IdentityProperties.PasswordReset(1800, BASE_URL, false),
-         Map.of("checkout-service", "s3cret"));
+         new IdentityProperties.PasswordReset(1800, BASE_URL, false));
       JwtSigner signer = new JwtSigner(keys.getPrivate(), RsaKeys.keyId(keys.getPublic()), "moneypot-identity", clock);
       PlainHasher hasher = new PlainHasher();
       SessionIssuer sessions = new SessionIssuer(signer, properties);
@@ -222,7 +210,6 @@ class IdentityServiceTest {
          new RegisterMemberService(createUser, users, sessions),
          new LoginService(users, hasher, sessions, properties, clock),
          createUser,
-         new IssueServiceTokenService(properties, signer),
          new ForgotPasswordService(users, resets, mail, properties, clock),
          new ResetPasswordService(users, resets, hasher, clock));
       verifier = new RsaJwtVerifier(kid -> keys.getPublic(), "moneypot-identity", clock);
@@ -239,7 +226,6 @@ class IdentityServiceTest {
       var principal = verifier.verify(session.accessToken()).orElseThrow();
       assertThat(principal.userId()).isEqualTo(session.user().id());
       assertThat(principal.roles()).containsExactly(UserRole.ROLE_MEMBER);
-      assertThat(principal.sellerId()).isNull();
       assertThat(session.accessExpiresIn()).isEqualTo(600);
    }
 
@@ -251,16 +237,6 @@ class IdentityServiceTest {
       assertThatThrownBy(() -> identity.register("b@example.com", "short")).isInstanceOf(InvalidCommandException.class);
       assertThatThrownBy(() -> identity.register("b@example.com", "x".repeat(73))).isInstanceOf(InvalidCommandException.class);
       assertThatThrownBy(() -> identity.register("not-an-email", "correct horse")).isInstanceOf(InvalidCommandException.class);
-   }
-
-   @Test
-   void sellersGetTheirOwnUserIdAsSellerId() {
-      UserResult seller = identity.createSeller("shop@example.com", "correct horse");
-
-      SessionResult session = identity.login("shop@example.com", "correct horse");
-      var principal = verifier.verify(session.accessToken()).orElseThrow();
-      assertThat(principal.roles()).containsExactly(UserRole.ROLE_SELLER);
-      assertThat(principal.sellerId()).isEqualTo(seller.id());
    }
 
    @Test
@@ -296,20 +272,6 @@ class IdentityServiceTest {
       catchUnauthorized(() -> identity.login("a@example.com", "wrong password"));
       catchUnauthorized(() -> identity.login("a@example.com", "wrong password"));
       assertThat(identity.login("a@example.com", "correct horse")).isNotNull(); // 2 + 2 failures, never 3 in a row
-   }
-
-   @Test
-   void serviceTokensRequireTheConfiguredSecret() {
-      ServiceTokenResult token = identity.serviceToken("checkout-service", "s3cret");
-
-      var principal = verifier.verify(token.accessToken()).orElseThrow();
-      assertThat(principal.userId()).isEqualTo("checkout-service");
-      assertThat(principal.roles()).containsExactly(UserRole.ROLE_SYSTEM);
-      assertThat(token.expiresIn()).isEqualTo(300);
-
-      assertThatThrownBy(() -> identity.serviceToken("checkout-service", "wrong")).isInstanceOf(UnauthorizedException.class);
-      assertThatThrownBy(() -> identity.serviceToken("unknown", "s3cret")).isInstanceOf(UnauthorizedException.class);
-      assertThatThrownBy(() -> identity.serviceToken(null, null)).isInstanceOf(UnauthorizedException.class);
    }
 
    // --- forgot and reset password ---------------------------------------------------------------------------------

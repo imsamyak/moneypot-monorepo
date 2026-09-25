@@ -14,5 +14,3 @@ identity:
   password-reset:
     link-base-url: ${IDENTITY_PASSWORD_RESET_LINK_BASE_URL}
     log-links: false
-  service-clients:
-    checkout-service: ${CHECKOUT_CLIENT_SECRET}

@@ -1,7 +1,5 @@
 package com.moneypot.identity;
 
-import com.moneypot.identity.port.in.usecase.CreateUserUseCase;
-import com.moneypot.identity.port.in.usecase.dto.command.CreateUserCmd;
 import com.moneypot.identity.port.out.PasswordResetNotifier;
 import com.moneypot.security.UserPrincipal;
 import com.moneypot.security.UserRole;
@@ -71,8 +69,6 @@ class IdentityIntegrationTest {
    @Value("${local.server.port}")
    int port;
 
-   @Autowired
-   CreateUserUseCase createUser;
 
    @Autowired
    JwtSigner signer;
@@ -109,12 +105,6 @@ class IdentityIntegrationTest {
       Reply reply = call("POST", "/api/auth/register", null, credentials(email, PASSWORD));
       assertThat(reply.status()).isEqualTo(201);
       return reply;
-   }
-
-   private String adminToken() {
-      String email = uniqueEmail();
-      createUser.execute(new CreateUserCmd(email, PASSWORD, UserRole.ROLE_ADMIN));
-      return signer.sign(UserPrincipal.of(UUID.randomUUID().toString(), email, UserRole.ROLE_ADMIN, null), Duration.ofMinutes(5));
    }
 
    // --- sign up and sign in ---------------------------------------------------------------------------------------
@@ -164,24 +154,6 @@ class IdentityIntegrationTest {
    }
 
    @Test
-   void anyoneCanSignUpAsASellerAndGetsASellerIdInTheirToken() throws Exception {
-      String email = uniqueEmail();
-
-      Reply reply = call("POST", "/api/auth/register/seller", null, credentials(email, PASSWORD));
-
-      assertThat(reply.status()).isEqualTo(201);
-      assertThat(reply.body().path("user").path("role").asText()).isEqualTo("ROLE_SELLER");
-      String sellerId = reply.body().path("user").path("sellerId").asText();
-      assertThat(sellerId).isNotBlank();
-      Reply me = call("GET", "/api/auth/me", reply.body().path("accessToken").asText(), null);
-      assertThat(me.status()).isEqualTo(200);
-      assertThat(me.body().path("sellerId").asText()).isEqualTo(sellerId);
-      assertThat(call("POST", "/api/auth/login", null, credentials(email, PASSWORD)).status()).isEqualTo(200);
-      assertThat(call("POST", "/api/auth/register/seller", null, credentials(email, PASSWORD)).status()).as("taken").isEqualTo(409);
-      assertThat(call("POST", "/api/auth/register/seller", null, credentials(uniqueEmail(), "short")).status()).isEqualTo(400);
-   }
-
-   @Test
    void accountLocksAfterRepeatedFailures() throws Exception {
       String email = uniqueEmail();
       register(email);
@@ -202,25 +174,6 @@ class IdentityIntegrationTest {
    }
 
    @Test
-   void onlyAdminsCreateSellers() throws Exception {
-      Reply member = register(uniqueEmail());
-      String sellerEmail = uniqueEmail();
-      String body = credentials(sellerEmail, PASSWORD);
-
-      assertThat(call("POST", "/api/auth/admin/sellers", null, body).status()).isEqualTo(401);
-      assertThat(call("POST", "/api/auth/admin/sellers", member.text("accessToken"), body).status()).isEqualTo(403);
-
-      Reply created = call("POST", "/api/auth/admin/sellers", adminToken(), body);
-      assertThat(created.status()).isEqualTo(201);
-      assertThat(created.text("role")).isEqualTo("ROLE_SELLER");
-      assertThat(created.text("sellerId")).isEqualTo(created.text("id"));
-
-      Reply sellerLogin = call("POST", "/api/auth/login", null, body);
-      assertThat(sellerLogin.status()).isEqualTo(200);
-      assertThat(sellerLogin.body().path("user").path("sellerId").asText()).isEqualTo(created.text("id"));
-   }
-
-   @Test
    void theJwksVerifiesTokensTheServiceIssued() throws Exception {
       Reply session = register(uniqueEmail());
 
@@ -238,29 +191,13 @@ class IdentityIntegrationTest {
    }
 
    @Test
-   void serviceTokensComeFromClientCredentials() throws Exception {
-      Reply ok = call("POST", "/api/auth/token", null, "{\"clientId\":\"checkout-service\",\"clientSecret\":\"test-client-secret\"}");
-      assertThat(ok.status()).isEqualTo(200);
-      assertThat(ok.body().path("expiresIn").asLong()).isEqualTo(300);
-
-      Reply jwks = call("GET", "/api/.well-known/jwks.json", null, null);
-      JsonNode key = jwks.body().path("keys").get(0);
-      PublicKey publicKey = RsaKeys.fromJwk(key.path("n").asText(), key.path("e").asText());
-      var principal = new RsaJwtVerifier(kid -> publicKey, "moneypot-identity").verify(ok.text("accessToken")).orElseThrow();
-      assertThat(principal.hasRole(UserRole.ROLE_SYSTEM)).isTrue();
-
-      assertThat(call("POST", "/api/auth/token", null, "{\"clientId\":\"checkout-service\",\"clientSecret\":\"nope\"}").status()).isEqualTo(401);
-   }
-
-   @Test
    void tokensSignedElsewhereOrExpiredAreRejected() throws Exception {
-      UserPrincipal admin = UserPrincipal.of(UUID.randomUUID().toString(), null, UserRole.ROLE_ADMIN, null);
+      UserPrincipal admin = UserPrincipal.of(UUID.randomUUID().toString(), null, UserRole.ROLE_MEMBER);
       String forged = JwtSigner.forKey(RsaKeys.generate().getPrivate(), "moneypot-identity").sign(admin, Duration.ofMinutes(5));
       String expired = signer.sign(admin, Duration.ofHours(-1));
-      String body = credentials(uniqueEmail(), PASSWORD);
 
-      assertThat(call("POST", "/api/auth/admin/sellers", forged, body).status()).isEqualTo(401);
-      assertThat(call("POST", "/api/auth/admin/sellers", expired, body).status()).isEqualTo(401);
+      assertThat(call("GET", "/api/auth/me", forged, null).status()).isEqualTo(401);
+      assertThat(call("GET", "/api/auth/me", expired, null).status()).isEqualTo(401);
    }
 
    // --- logout ----------------------------------------------------------------------------------------------------

@@ -3,13 +3,10 @@ package com.moneypot.identity.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
-import java.util.Map;
-
 @ConfigurationProperties(prefix = "identity")
 public record IdentityProperties(@DefaultValue Jwt jwt,
                                  @DefaultValue Lockout lockout,
-                                 @DefaultValue PasswordReset passwordReset,
-                                 @DefaultValue Map<String, String> serviceClients) {
+                                 @DefaultValue PasswordReset passwordReset) {
 
    /**
     * {@code privateKey} is a PKCS#8 PEM (or a {@code classpath:}/{@code file:} location). Only when it is empty and
@@ -18,8 +15,7 @@ public record IdentityProperties(@DefaultValue Jwt jwt,
    public record Jwt(String privateKey,
                      String devKeyFile,
                      @DefaultValue("moneypot-identity") String issuer,
-                     @DefaultValue("3600") long accessTtlSeconds,
-                     @DefaultValue("300") long serviceTtlSeconds) {
+                     @DefaultValue("3600") long accessTtlSeconds) {
    }
 
    public record Lockout(@DefaultValue("5") int maxAttempts,
