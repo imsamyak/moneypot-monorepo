@@ -10,8 +10,7 @@ import java.util.Set;
 public record UserPrincipal(
     String userId,
     String email,
-    Set<UserRole> roles,
-    String sellerId
+    Set<UserRole> roles
 ) {
 
    public UserPrincipal {
@@ -34,7 +33,7 @@ public record UserPrincipal(
       return false;
    }
 
-   public static UserPrincipal of(String userId, String email, UserRole role, String sellerId) {
-      return new UserPrincipal(userId, email, Collections.singleton(role), sellerId);
+   public static UserPrincipal of(String userId, String email, UserRole role) {
+      return new UserPrincipal(userId, email, Collections.singleton(role));
    }
 }

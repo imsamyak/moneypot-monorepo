@@ -2,9 +2,7 @@ package com.moneypot.security;
 
 public enum UserRole {
    ROLE_MEMBER,
-   ROLE_SELLER,
-   ROLE_ADMIN,
-   ROLE_SYSTEM;
+   ROLE_ADMIN;
 
    /**
     * Parses a role name, with or without the {@code ROLE_} prefix and ignoring case.

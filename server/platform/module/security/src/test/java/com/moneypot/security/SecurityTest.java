@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SecurityTest {
 
    static class Controller {
-      @RequireRole(UserRole.ROLE_SELLER)
-      public void sellersOnly() {
+      @RequireRole(UserRole.ROLE_ADMIN)
+      public void adminsOnly() {
       }
 
       public void open() {
@@ -47,24 +47,24 @@ class SecurityTest {
 
    @Test
    void interceptorRejectsAnonymousCallerWith401() {
-      assertThatThrownBy(() -> call("sellersOnly")).isInstanceOf(UnauthorizedException.class);
+      assertThatThrownBy(() -> call("adminsOnly")).isInstanceOf(UnauthorizedException.class);
    }
 
    @Test
    void interceptorRejectsWrongRoleWith403() {
-      SecurityContext.setPrincipal(UserPrincipal.of("u1", "a@b.c", UserRole.ROLE_MEMBER, null));
-      assertThatThrownBy(() -> call("sellersOnly")).isInstanceOf(ForbiddenException.class);
+      SecurityContext.setPrincipal(UserPrincipal.of("u1", "a@b.c", UserRole.ROLE_MEMBER));
+      assertThatThrownBy(() -> call("adminsOnly")).isInstanceOf(ForbiddenException.class);
    }
 
    @Test
    void interceptorAllowsMatchingRole() throws Exception {
-      SecurityContext.setPrincipal(UserPrincipal.of("u1", "a@b.c", UserRole.ROLE_SELLER, null));
-      assertThat(call("sellersOnly")).isTrue();
+      SecurityContext.setPrincipal(UserPrincipal.of("u1", "a@b.c", UserRole.ROLE_ADMIN));
+      assertThat(call("adminsOnly")).isTrue();
    }
 
    @Test
    void filterSetsPrincipalDuringRequestAndClearsAfter() throws Exception {
-      UserPrincipal caller = UserPrincipal.of("u1", "a@b.c", UserRole.ROLE_MEMBER, null);
+      UserPrincipal caller = UserPrincipal.of("u1", "a@b.c", UserRole.ROLE_MEMBER);
       PrincipalFilter filter = new PrincipalFilter(request -> Optional.of(caller));
       UserPrincipal[] seen = new UserPrincipal[1];
 

@@ -59,7 +59,6 @@ public class JwtSigner {
          claims.put("iss", issuer);
          claims.put("sub", principal.userId());
          claims.put("email", principal.email());
-         claims.put("sellerId", principal.sellerId());
          claims.put("roles", principal.roles().stream().map(Enum::name).sorted().collect(Collectors.toList()));
          claims.put("iat", now);
          claims.put("exp", now + ttl.toSeconds());

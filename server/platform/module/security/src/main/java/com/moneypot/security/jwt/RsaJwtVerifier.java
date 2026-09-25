@@ -95,7 +95,7 @@ public class RsaJwtVerifier implements TokenVerifier {
          if (userId == null || userId.isBlank() || roles.isEmpty()) {
             return Optional.empty();
          }
-         return Optional.of(new UserPrincipal(userId, (String) claims.get("email"), roles, (String) claims.get("sellerId")));
+         return Optional.of(new UserPrincipal(userId, (String) claims.get("email"), roles));
       } catch (Exception e) {
          log.debug("Rejected JWT: {}", e.getMessage());
          return Optional.empty();

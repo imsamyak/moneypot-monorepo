@@ -38,28 +38,4 @@ public final class OwnershipGuard {
          throw ForbiddenException.of(NOT_OWNER);
       }
    }
-
-   /**
-    * Passes only for a seller whose seller id equals {@code ownerSellerId}.
-    */
-   public static void requireSeller(UUID ownerSellerId) {
-      requireSellerOr(ownerSellerId);
-   }
-
-   /**
-    * Passes for a seller whose seller id equals {@code ownerSellerId}, or for a caller with one of
-    * {@code alsoAllowed}.
-    *
-    * @throws UnauthorizedException if the request is anonymous
-    * @throws ForbiddenException    if none of the above applies
-    */
-   public static void requireSellerOr(UUID ownerSellerId, UserRole... alsoAllowed) {
-      UserPrincipal principal = Caller.principal();
-      boolean owner = ownerSellerId != null
-          && principal.hasRole(UserRole.ROLE_SELLER)
-          && ownerSellerId.toString().equalsIgnoreCase(principal.sellerId());
-      if (!owner && !principal.hasAnyRole(alsoAllowed)) {
-         throw ForbiddenException.of(NOT_OWNER);
-      }
-   }
 }

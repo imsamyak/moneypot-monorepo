@@ -25,39 +25,38 @@ class JwtTest {
    private final JwtSigner signer = new JwtSigner(keys.getPrivate(), RsaKeys.keyId(keys.getPublic()), ISSUER, now);
    private final RsaJwtVerifier verifier = new RsaJwtVerifier(kid -> keys.getPublic(), ISSUER, now);
 
-   private static UserPrincipal seller() {
-      return UserPrincipal.of("u-1", "s@example.com", UserRole.ROLE_SELLER, "u-1");
+   private static UserPrincipal member() {
+      return UserPrincipal.of("u-1", "s@example.com", UserRole.ROLE_MEMBER);
    }
 
    @Test
    void aSignedTokenVerifiesToTheSamePrincipal() {
-      String token = signer.sign(seller(), Duration.ofMinutes(10));
+      String token = signer.sign(member(), Duration.ofMinutes(10));
 
       UserPrincipal principal = verifier.verify(token).orElseThrow();
 
       assertThat(principal.userId()).isEqualTo("u-1");
       assertThat(principal.email()).isEqualTo("s@example.com");
-      assertThat(principal.roles()).containsExactly(UserRole.ROLE_SELLER);
-      assertThat(principal.sellerId()).isEqualTo("u-1");
+      assertThat(principal.roles()).containsExactly(UserRole.ROLE_MEMBER);
    }
 
    @Test
    void anExpiredTokenIsRejected() {
-      assertThat(verifier.verify(signer.sign(seller(), Duration.ofHours(-1)))).isEmpty();
+      assertThat(verifier.verify(signer.sign(member(), Duration.ofHours(-1)))).isEmpty();
    }
 
    @Test
    void aTokenSignedWithAnotherKeyIsRejected() {
       JwtSigner stranger = JwtSigner.forKey(RsaKeys.generate().getPrivate(), ISSUER);
 
-      assertThat(verifier.verify(stranger.sign(seller(), Duration.ofMinutes(10)))).isEmpty();
+      assertThat(verifier.verify(stranger.sign(member(), Duration.ofMinutes(10)))).isEmpty();
    }
 
    @Test
    void aTokenFromAnotherIssuerIsRejected() {
       JwtSigner other = new JwtSigner(keys.getPrivate(), RsaKeys.keyId(keys.getPublic()), "someone-else", now);
 
-      assertThat(verifier.verify(other.sign(seller(), Duration.ofMinutes(10)))).isEmpty();
+      assertThat(verifier.verify(other.sign(member(), Duration.ofMinutes(10)))).isEmpty();
    }
 
    @Test
@@ -111,7 +110,7 @@ class JwtTest {
    @Test
    void theBearerResolverReadsOnlyTheAuthorizationHeader() {
       BearerPrincipalResolver resolver = new BearerPrincipalResolver(providerOf(verifier));
-      String token = signer.sign(seller(), Duration.ofMinutes(10));
+      String token = signer.sign(member(), Duration.ofMinutes(10));
 
       MockHttpServletRequest bearer = new MockHttpServletRequest();
       bearer.addHeader("Authorization", "Bearer " + token);
@@ -137,7 +136,7 @@ class JwtTest {
    void withoutAVerifierEveryRequestIsAnonymous() {
       BearerPrincipalResolver resolver = new BearerPrincipalResolver(providerOf(null));
       MockHttpServletRequest request = new MockHttpServletRequest();
-      request.addHeader("Authorization", "Bearer " + signer.sign(seller(), Duration.ofMinutes(10)));
+      request.addHeader("Authorization", "Bearer " + signer.sign(member(), Duration.ofMinutes(10)));
 
       assertThat(resolver.resolve(request)).isEqualTo(Optional.empty());
    }

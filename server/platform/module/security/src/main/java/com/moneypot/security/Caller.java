@@ -37,18 +37,6 @@ public final class Caller {
       return parse(principal().userId(), "userId");
    }
 
-   /**
-    * @throws UnauthorizedException if the request is anonymous or the seller id is not a valid UUID
-    * @throws ForbiddenException    if the caller is not a seller
-    */
-   public static UUID sellerId() {
-      String sellerId = principal().sellerId();
-      if (sellerId == null || sellerId.isBlank()) {
-         throw ForbiddenException.of("The authenticated user is not a seller");
-      }
-      return parse(sellerId, "sellerId");
-   }
-
    private static UUID parse(String value, String what) {
       try {
          return UUID.fromString(value);
