@@ -1,0 +1,30 @@
+{
+  "name": "@moneypot/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MoneyPot, the savings-pot web app",
+  "scripts": {
+    "predev": "pnpm --filter @moneypot/platform-sdk build",
+    "dev": "next dev --port 3100",
+    "prebuild": "pnpm --filter @moneypot/platform-sdk build",
+    "build": "next build",
+    "start": "next start --port 3100",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@moneypot/platform-sdk": "workspace:*",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "postcss": "^8.5.31",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}
