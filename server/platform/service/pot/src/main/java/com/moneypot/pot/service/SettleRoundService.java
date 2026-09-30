@@ -7,6 +7,7 @@ import com.moneypot.pot.domain.exception.PotNotFoundException;
 import com.moneypot.pot.port.in.usecase.SettleRoundUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.SettleRoundCmd;
 import com.moneypot.pot.port.in.usecase.dto.result.PotChangeResult;
+import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadMemberPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
 import com.moneypot.pot.port.out.persistence.LoadRoundPort;
@@ -39,6 +40,7 @@ public class SettleRoundService implements SettleRoundUseCase {
    private final LoadMemberPort loadMemberPort;
    private final RoundSupport roundSupport;
    private final PotAssembler potAssembler;
+   private final NotifyPotChangedPort notifyPotChangedPort;
 
    @Override
    @Transactional
@@ -56,6 +58,7 @@ public class SettleRoundService implements SettleRoundUseCase {
 
       List<PotChangeResult.TransferRequest> requests =
             roundSupport.settle(pot, round, loadMemberPort.loadByPotId(pot.getId()));
+      notifyPotChangedPort.potChanged(pot.getId());
       return new PotChangeResult(potAssembler.assemble(pot, null), requests);
    }
 

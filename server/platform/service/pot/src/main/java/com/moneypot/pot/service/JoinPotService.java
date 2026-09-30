@@ -6,6 +6,7 @@ import com.moneypot.pot.domain.exception.PotNotFoundException;
 import com.moneypot.pot.port.in.usecase.JoinPotUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.JoinPotCmd;
 import com.moneypot.pot.port.in.usecase.dto.result.PotResult;
+import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadMemberPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
 import com.moneypot.pot.port.out.persistence.SaveMemberPort;
@@ -27,6 +28,7 @@ public class JoinPotService implements JoinPotUseCase {
    private final LoadPotForUpdatePort loadPotForUpdatePort;
    private final LoadMemberPort loadMemberPort;
    private final SaveMemberPort saveMemberPort;
+   private final NotifyPotChangedPort notifyPotChangedPort;
    private final PotAssembler potAssembler;
 
    @Override
@@ -44,6 +46,7 @@ public class JoinPotService implements JoinPotUseCase {
          throw BusinessRuleException.of("The pot is full");
       }
       saveMemberPort.save(PotMember.join(pot.getId(), cmd.userId(), members.size() + 1));
+      notifyPotChangedPort.potChanged(pot.getId());
       return potAssembler.assemble(pot, cmd.userId());
    }
 }

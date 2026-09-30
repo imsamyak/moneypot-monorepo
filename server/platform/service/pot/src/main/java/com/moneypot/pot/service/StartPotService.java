@@ -6,6 +6,7 @@ import com.moneypot.pot.domain.exception.PotNotFoundException;
 import com.moneypot.pot.port.in.usecase.StartPotUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.StartPotCmd;
 import com.moneypot.pot.port.in.usecase.dto.result.PotChangeResult;
+import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadMemberPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
 import com.moneypot.pot.port.out.persistence.SavePotPort;
@@ -33,6 +34,7 @@ public class StartPotService implements StartPotUseCase {
    private final SavePotPort savePotPort;
    private final RoundSupport roundSupport;
    private final PotAssembler potAssembler;
+   private final NotifyPotChangedPort notifyPotChangedPort;
 
    @Override
    @Transactional
@@ -49,6 +51,7 @@ public class StartPotService implements StartPotUseCase {
       pot.start();
       Pot saved = savePotPort.save(pot);
       List<PotChangeResult.TransferRequest> requests = roundSupport.openRound(saved, members);
+      notifyPotChangedPort.potChanged(saved.getId());
       return new PotChangeResult(potAssembler.assemble(saved, cmd.userId()), requests);
    }
 

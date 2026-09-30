@@ -9,6 +9,7 @@ import com.moneypot.pot.domain.exception.PotNotFoundException;
 import com.moneypot.pot.port.in.usecase.RecordTransferResultUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.RecordTransferResultCmd;
 import com.moneypot.pot.port.in.usecase.dto.result.PotChangeResult;
+import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadMemberPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
 import com.moneypot.pot.port.out.persistence.LoadRoundPort;
@@ -56,6 +57,7 @@ public class RecordTransferResultService implements RecordTransferResultUseCase 
    private final SaveMemberPort saveMemberPort;
    private final RoundSupport roundSupport;
    private final PotAssembler potAssembler;
+   private final NotifyPotChangedPort notifyPotChangedPort;
 
    @Override
    @Transactional
@@ -78,6 +80,7 @@ public class RecordTransferResultService implements RecordTransferResultUseCase 
          log.info("Transfer {} of pot {} was rejected: {}", transfer.getId(), pot.getId(), cmd.reason());
       }
       saveTransferPort.save(transfer);
+      notifyPotChangedPort.potChanged(pot.getId());
 
       List<PotChangeResult.TransferRequest> requests = new ArrayList<>();
       if (cmd.completed()) {

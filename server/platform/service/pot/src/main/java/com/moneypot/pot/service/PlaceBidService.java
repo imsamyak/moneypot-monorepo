@@ -8,6 +8,7 @@ import com.moneypot.pot.domain.exception.PotNotFoundException;
 import com.moneypot.pot.port.in.usecase.PlaceBidUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.PlaceBidCmd;
 import com.moneypot.pot.port.in.usecase.dto.result.PotResult;
+import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadBidPort;
 import com.moneypot.pot.port.out.persistence.LoadMemberPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
@@ -38,6 +39,7 @@ public class PlaceBidService implements PlaceBidUseCase {
    private final LoadBidPort loadBidPort;
    private final SaveBidPort saveBidPort;
    private final PotAssembler potAssembler;
+   private final NotifyPotChangedPort notifyPotChangedPort;
 
    @Override
    @Transactional
@@ -69,6 +71,7 @@ public class PlaceBidService implements PlaceBidUseCase {
          existing.lowerTo(cmd.amount(), now);
          saveBidPort.save(existing);
       }
+      notifyPotChangedPort.potChanged(pot.getId());
       return potAssembler.assemble(pot, cmd.userId());
    }
 }

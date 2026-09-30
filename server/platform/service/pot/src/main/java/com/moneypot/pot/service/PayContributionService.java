@@ -9,6 +9,7 @@ import com.moneypot.pot.domain.exception.PotNotFoundException;
 import com.moneypot.pot.port.in.usecase.PayContributionUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.PayContributionCmd;
 import com.moneypot.pot.port.in.usecase.dto.result.PotChangeResult;
+import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
 import com.moneypot.pot.port.out.persistence.LoadRoundPort;
 import com.moneypot.pot.port.out.persistence.LoadTransferPort;
@@ -38,6 +39,7 @@ public class PayContributionService implements PayContributionUseCase {
    private final LoadTransferPort loadTransferPort;
    private final SaveTransferPort saveTransferPort;
    private final PotAssembler potAssembler;
+   private final NotifyPotChangedPort notifyPotChangedPort;
 
    @Override
    @Transactional
@@ -54,6 +56,7 @@ public class PayContributionService implements PayContributionUseCase {
 
       transfer.retry();
       saveTransferPort.save(transfer);
+      notifyPotChangedPort.potChanged(pot.getId());
       return new PotChangeResult(potAssembler.assemble(pot, cmd.userId()),
             List.of(new PotChangeResult.TransferRequest(transfer.getId(), round.getId(), transfer.getUserId(),
                   transfer.getKind(), transfer.getAmount())));
