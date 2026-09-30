@@ -19,11 +19,17 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.WebSocket;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -402,5 +408,85 @@ class PotIntegrationTest {
    void everythingNeedsASignedInMember() throws Exception {
       assertThat(call("GET", "/api/pots", null, null).status()).isEqualTo(401);
       assertThat(call("POST", "/api/pots", "{}", null).status()).isEqualTo(401);
+   }
+
+   // ------------------------------------------------------------------ live updates
+
+   /** Opens the live connection of a pot with a ticket; what arrives is queued, and a close is reported. */
+   private record Watch(BlockingQueue<String> messages, CompletableFuture<Integer> closed) {
+   }
+
+   private Watch watch(String ticket) throws Exception {
+      BlockingQueue<String> messages = new LinkedBlockingQueue<>();
+      CompletableFuture<Integer> closed = new CompletableFuture<>();
+      http.newWebSocketBuilder().buildAsync(URI.create("ws://localhost:" + port + "/api/ws/pots?ticket=" + ticket), new WebSocket.Listener() {
+         @Override
+         public void onOpen(WebSocket socket) {
+            socket.request(1);
+         }
+
+         @Override
+         public CompletionStage<?> onText(WebSocket socket, CharSequence data, boolean last) {
+            messages.add(data.toString());
+            socket.request(1);
+            return null;
+         }
+
+         @Override
+         public CompletionStage<?> onClose(WebSocket socket, int statusCode, String reason) {
+            closed.complete(statusCode);
+            return null;
+         }
+      }).get(5, TimeUnit.SECONDS);
+      return new Watch(messages, closed);
+   }
+
+   private String ticket(UUID user, UUID pot) throws Exception {
+      Reply reply = as(user, "POST", "/api/pots/" + pot + "/socket-ticket", null);
+      assertThat(reply.status()).isEqualTo(200);
+      return reply.body().path("ticket").asText();
+   }
+
+   @Test
+   void aMemberWatchingAPotIsToldWhenItChanges() throws Exception {
+      UUID owner = UUID.randomUUID();
+      UUID pot = createPot(owner);
+      Watch watching = watch(ticket(owner, pot));
+
+      as(UUID.randomUUID(), "POST", "/api/pots/" + pot + "/join", null);
+
+      assertThat(watching.messages().poll(5, TimeUnit.SECONDS)).isEqualTo("changed");
+   }
+
+   @Test
+   void aWatcherOfOnePotHearsNothingAboutAnother() throws Exception {
+      UUID owner = UUID.randomUUID();
+      UUID watched = createPot(owner);
+      UUID other = createPot(UUID.randomUUID());
+      Watch watching = watch(ticket(owner, watched));
+
+      as(UUID.randomUUID(), "POST", "/api/pots/" + other + "/join", null);
+
+      assertThat(watching.messages().poll(1, TimeUnit.SECONDS)).isNull();
+   }
+
+   @Test
+   void onlyMembersGetATicketAndATicketOpensOneConnectionOnly() throws Exception {
+      UUID owner = UUID.randomUUID();
+      UUID pot = createPot(owner);
+
+      assertThat(as(UUID.randomUUID(), "POST", "/api/pots/" + pot + "/socket-ticket", null).status()).isEqualTo(403);
+      assertThat(call("POST", "/api/pots/" + pot + "/socket-ticket", null, null).status()).isEqualTo(401);
+
+      String ticket = ticket(owner, pot);
+      Watch first = watch(ticket);
+      Watch second = watch(ticket);
+      Watch invented = watch("not-a-ticket");
+
+      // the two connections race for the ticket: one gets in, the other is closed
+      assertThat(CompletableFuture.anyOf(first.closed(), second.closed()).get(5, TimeUnit.SECONDS)).isEqualTo(1008);
+      Thread.sleep(300);
+      assertThat(List.of(first, second).stream().filter(watch -> watch.closed().isDone()).count()).isEqualTo(1);
+      assertThat(invented.closed().get(5, TimeUnit.SECONDS)).isEqualTo(1008);
    }
 }
