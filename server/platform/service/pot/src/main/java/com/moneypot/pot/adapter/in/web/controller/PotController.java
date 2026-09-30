@@ -3,11 +3,14 @@ package com.moneypot.pot.adapter.in.web.controller;
 import com.moneypot.pot.adapter.in.web.controller.dto.request.CreatePotRequest;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotListResponse;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotResponse;
+import com.moneypot.pot.adapter.in.web.controller.dto.response.SocketTicketResponse;
 import com.moneypot.pot.port.in.usecase.CreatePotUseCase;
 import com.moneypot.pot.port.in.usecase.GetPotUseCase;
+import com.moneypot.pot.port.in.usecase.IssueSocketTicketUseCase;
 import com.moneypot.pot.port.in.usecase.JoinPotUseCase;
 import com.moneypot.pot.port.in.usecase.ListPotsUseCase;
 import com.moneypot.pot.port.in.usecase.StartPotUseCase;
+import com.moneypot.pot.port.in.usecase.dto.command.IssueSocketTicketCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.JoinPotCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.StartPotCmd;
 import com.moneypot.pot.port.in.usecase.dto.query.GetPotQuery;
@@ -41,6 +44,7 @@ public class PotController {
    private final GetPotUseCase getPotUseCase;
    private final JoinPotUseCase joinPotUseCase;
    private final StartPotUseCase startPotUseCase;
+   private final IssueSocketTicketUseCase issueSocketTicketUseCase;
 
    @PostMapping
    @ResponseStatus(HttpStatus.CREATED)
@@ -62,6 +66,12 @@ public class PotController {
    @PostMapping("/{potId}/join")
    public PotResponse join(@PathVariable UUID potId) {
       return PotResponse.from(joinPotUseCase.execute(new JoinPotCmd(potId, Caller.userId())));
+   }
+
+   /** A one-time ticket to open the live connection of this pot (members only); see {@code /api/ws/pots}. */
+   @PostMapping("/{potId}/socket-ticket")
+   public SocketTicketResponse socketTicket(@PathVariable UUID potId) {
+      return SocketTicketResponse.from(issueSocketTicketUseCase.execute(new IssueSocketTicketCmd(potId, Caller.userId())));
    }
 
    @PostMapping("/{potId}/start")
