@@ -17,3 +17,6 @@ Money is always an integer number of **paise** (1/100 of a rupee).
 
 Where each service is comes from `MONEYPOT_API_URL` (one address for all) or `MONEYPOT_IDENTITY_URL`,
 `MONEYPOT_WALLET_URL`, `MONEYPOT_POT_URL`; otherwise the local ports (9086, 9081, 9082).
+
+A pot can also be watched live: `pots.issueSocketTicket` gives a one-time ticket for `ws://<pot service>/api/ws/pots?ticket=...`,
+which sends `changed` whenever the pot does.

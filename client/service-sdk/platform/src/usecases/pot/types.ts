@@ -76,3 +76,8 @@ export interface PotSummaryResponse {
 export interface PotListResponse {
   items: PotSummaryResponse[];
 }
+
+/** Open `/api/ws/pots?ticket=<ticket>` on the pot service within 30 seconds; it works once. */
+export interface SocketTicketResponse {
+  ticket: string;
+}

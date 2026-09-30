@@ -1,6 +1,6 @@
 import { useCase } from '@moneypot/sdk-core';
 import { createPotBody, listPotsQuery, placeBidBody, potParams } from './schemas.js';
-import type { PotListResponse, PotResponse } from './types.js';
+import type { PotListResponse, PotResponse, SocketTicketResponse } from './types.js';
 
 export type * from './types.js';
 
@@ -75,4 +75,23 @@ export const settleRound = useCase('SettleRound')
   .authRequired()
   .build();
 
-export const potUseCases = [createPot, listPots, getPot, joinPot, startPot, payContribution, placeBid, settleRound] as const;
+/** Members only: a one-time ticket to watch the pot live over a WebSocket (the browser cannot send its token there). */
+export const issueSocketTicket = useCase('IssueSocketTicket')
+  .service('pot')
+  .post('/api/pots/{potId}/socket-ticket')
+  .params(potParams)
+  .returns<SocketTicketResponse>()
+  .authRequired()
+  .build();
+
+export const potUseCases = [
+  createPot,
+  listPots,
+  getPot,
+  joinPot,
+  startPot,
+  payContribution,
+  placeBid,
+  settleRound,
+  issueSocketTicket,
+] as const;

@@ -21,6 +21,7 @@ const backend: Record<string, string> = {
   PayContribution: 'POST /api/pots/{potId}/contribution',
   PlaceBid: 'POST /api/pots/{potId}/bids',
   SettleRound: 'POST /api/pots/{potId}/settle',
+  IssueSocketTicket: 'POST /api/pots/{potId}/socket-ticket',
 };
 
 describe('the SDK use cases', () => {
