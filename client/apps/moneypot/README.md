@@ -12,5 +12,5 @@ join, bid, ...) is a server action that calls the services through `@moneypot/pl
 reaches the browser: it lives in an httpOnly cookie.
 
 - `app/` the pages: `/` (home), `/login`, `/register`, `/wallet`, `/pots`, `/pots/new`, `/pots/[id]`
-- `components/` the few client components (forms, the auto-refresh while a round is running)
+- `components/` the few client components (forms, the live updates while a pot is running)
 - `lib/` the SDK instance, the signed-in user, the server actions, and money formatting (money is paise in the services)

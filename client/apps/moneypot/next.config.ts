@@ -5,6 +5,8 @@ import type { NextConfig } from 'next';
 const workspaceRoot = path.join(__dirname, '../../..');
 
 const nextConfig: NextConfig = {
+  // keep the repository free of generated agent files
+  agentRules: false,
   turbopack: { root: workspaceRoot },
   outputFileTracingRoot: workspaceRoot,
 };

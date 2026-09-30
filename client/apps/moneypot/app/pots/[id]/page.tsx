@@ -1,6 +1,6 @@
 import { SdkHttpError, type PotResponse } from '@moneypot/platform-sdk';
 import { notFound } from 'next/navigation';
-import { AutoRefresh } from '@/components/AutoRefresh';
+import { LiveUpdates } from '@/components/LiveUpdates';
 import { PotHistory } from '@/components/PotHistory';
 import { PotRound } from '@/components/PotRound';
 import { SubmitButton } from '@/components/SubmitButton';
@@ -36,7 +36,7 @@ export default async function PotPage({
 
   return (
     <div style={{ display: 'grid', gap: '1.2rem' }}>
-      {pot.status === 'ACTIVE' && <AutoRefresh />}
+      {mine && pot.status !== 'COMPLETED' && <LiveUpdates potId={pot.id} />}
       {error && <p className="notice notice-error" role="alert">{error}</p>}
 
       <div className="card">
