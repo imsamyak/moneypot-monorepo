@@ -21,6 +21,9 @@ pot:
   settlement:
     enabled: true
     interval-ms: 5000
+  websocket:
+    # The pages that may open the live connection of a pot (the web app). Comma separated.
+    allowed-origins: ${POT_WEBSOCKET_ALLOWED_ORIGINS:http://localhost:3100}
 
 moneypot:
   security:
