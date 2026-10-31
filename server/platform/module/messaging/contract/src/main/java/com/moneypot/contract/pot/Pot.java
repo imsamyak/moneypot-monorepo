@@ -22,7 +22,9 @@ public sealed interface Pot extends DomainEvent {
    enum Kind {
       CONTRIBUTION,
       PAYOUT,
-      DIVIDEND
+      DIVIDEND,
+      /** A member left before bidding started (or the pot was cancelled): their contribution goes back to them. */
+      REFUND
    }
 
    /** A new pot exists: the wallet opens the account that holds its money. */

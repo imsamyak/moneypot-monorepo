@@ -9,5 +9,7 @@ public enum EntryKind {
    /** The pot paid the winning bid to the winner. */
    PAYOUT,
    /** The pot returned a share of what the winner left to a member. */
-   DIVIDEND
+   DIVIDEND,
+   /** The member left before bidding started (or the pot was cancelled) and got their contribution back. */
+   REFUND
 }
