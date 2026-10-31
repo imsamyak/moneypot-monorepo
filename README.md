@@ -1,12 +1,19 @@
 # MoneyPot
 
-A savings-pot (kameti) platform. Friends form a **pot**; every month (a **round**) each member pays in, the members who
-have not won yet **bid** for the money, and the **lowest bid wins**. What the winner leaves (pot minus the winning bid)
-goes back to the other members as a dividend. A member who has won cannot win again, so a pot of N members runs N rounds.
-The last member left is paid the whole pot.
+A savings-pot (kameti) platform, by invitation only.
 
-Example: 10 members, Rs 5,000 each, pot Rs 50,000. Asha bids Rs 41,000 and wins it. The Rs 9,000 she left is shared by the
-other nine: Rs 1,000 each.
+1. Someone **creates a pot**: how much each member pays, how long each round of bidding stays open, and **when bidding
+   starts**. There is no limit on members. They get a private invite link.
+2. People **join with the link and pay their contribution when they join**. Until bidding starts they can **leave and get
+   it all back**.
+3. At the start time **joining closes** (nobody can join or leave from then on) and whoever has paid is the group.
+   Bidding opens straight away. If fewer than two members paid, the pot is cancelled and everyone is refunded.
+4. Each round the members who have not won yet **bid**, and the **lowest bid wins**. The winner gets their bid, and what
+   is left (pot minus bid) goes back to the other members as a dividend. A member who has won cannot win again, so a pot of
+   N members runs N rounds, and the last member left is paid the whole pot.
+
+Example: 10 members paid Rs 5,000 each, so the pot is Rs 50,000. Asha bids Rs 41,000 and wins it. The Rs 9,000 she left is
+shared by the other nine: Rs 1,000 each.
 
 ## How it is built
 
@@ -17,22 +24,23 @@ The same structure as the shop: hexagonal services, the transactional outbox and
   - `infra` named clients (RabbitMQ) and the adapters that plug the outbox and inbox into them
   - `service/identity` (9086) sign-up, login, JWT
   - `service/wallet` (9081) one account per member and per pot, an append-only ledger, atomic transfers
-  - `service/pot` (9082) pots, members, rounds, bids; settles rounds; tells watching pages about changes (WebSocket)
+  - `service/pot` (9082) pots, members, rounds, bids; starts pots at their start time and settles rounds; tells watching pages about changes (WebSocket)
   - `bootstrap/local` Postgres and RabbitMQ for development, and `e2e.py`
 - `client`
   - `packages/sdk-core` the engine behind the typed SDK, `packages/config` shared TypeScript settings
   - `service-sdk/platform` `@moneypot/platform-sdk`, one use case per endpoint
   - `apps/moneypot` `@moneypot/web`, the Next.js app (port 3100)
 
-### How a round moves
+### How the money moves
 
 The pot and the wallet only talk through events (RabbitMQ, through the outbox and inbox):
 
-1. Members pay in: the pot sends `Pot.TransferRequested` for every member; the wallet moves the money and answers
-   `Wallet.TransferCompleted` (or `TransferRejected`, for example when the balance is too low).
-2. When everyone has paid, bidding opens. The lowest bid wins when the time is over (or when the owner ends it).
-3. The pot asks the wallet to pay the winner the bid, and to give the others their dividend. When all are paid the
-   round is settled and the next one starts. After the last round the pot is complete.
+1. When someone joins, the pot sends `Pot.TransferRequested` (a contribution); the wallet moves the money and answers
+   `Wallet.TransferCompleted`, or `TransferRejected` when the balance is too low (the member is then not in).
+2. Leaving, or a pot that is cancelled, sends a `REFUND` the same way.
+3. Later rounds: when every contribution is paid bidding opens; when bidding ends the pot asks the wallet to pay the winner
+   the bid (`PAYOUT`) and give the others their share (`DIVIDEND`). When all are paid the round is settled and the next one
+   starts.
 
 Money is always a whole number of **paise** in the services; the pages show rupees.
 
