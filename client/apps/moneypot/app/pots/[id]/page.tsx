@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation';
 import { MemberTag } from '@/components/Avatar';
 import { Countdown } from '@/components/Countdown';
 import { Icon } from '@/components/icons';
-import { InviteLink } from '@/components/InviteLink';
+import { InviteCode } from '@/components/InviteCode';
 import { LiveUpdates } from '@/components/LiveUpdates';
+import { PotArt } from '@/components/PotArt';
 import { PotHistory } from '@/components/PotHistory';
 import { PotRound } from '@/components/PotRound';
 import { SubmitButton } from '@/components/SubmitButton';
-import { joinPot, leavePot } from '@/lib/actions';
+import { leavePot } from '@/lib/actions';
 import { formatDateTime, formatDuration, formatMoney } from '@/lib/format';
 import { api } from '@/lib/sdk';
 import { requireUser } from '@/lib/session';
@@ -21,16 +22,30 @@ const STATUS = {
   CANCELLED: { label: 'Cancelled', chip: 'chip chip-glass' },
 } as const;
 
+/** How full the pot drawing is: it fills as people join and pay, and drains as the round is paid out. */
+function levelFor(pot: PotResponse): number {
+  if (pot.status === 'OPEN') return Math.min(1, 0.15 + (pot.memberCount / 10) * 0.85);
+  if (pot.status === 'COMPLETED') return 0.12;
+  if (pot.status === 'CANCELLED') return 0.05;
+  const round = pot.round;
+  if (!round) return 0.5;
+  if (round.status === 'COLLECTING') {
+    const paid = round.transfers.filter((t) => t.kind === 'CONTRIBUTION' && t.status === 'DONE').length;
+    return 0.15 + 0.85 * (paid / Math.max(1, pot.memberCount));
+  }
+  return round.status === 'BIDDING' ? 1 : 0.35;
+}
+
 export default async function PotPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string; code?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
-  const { error, code } = await searchParams;
-  const user = await requireUser(code ? `/pots/${id}?code=${encodeURIComponent(code)}` : `/pots/${id}`);
+  const { error } = await searchParams;
+  const user = await requireUser(`/pots/${id}`);
 
   let pot: PotResponse;
   try {
@@ -52,21 +67,20 @@ export default async function PotPage({
       {error && <p className="notice notice-error" role="alert">{error}</p>}
 
       <section className="hero-card">
-        <div className="between" style={{ alignItems: 'flex-start' }}>
+        <div className="between" style={{ alignItems: 'center', flexWrap: 'nowrap' }}>
           <div className="stack-sm">
             <div className="cluster">
               <span className={status.chip}>{status.label}</span>
               {live && <span className="live">Live</span>}
             </div>
-            <h1 style={{ fontSize: '1.9rem', fontWeight: 850, lineHeight: 1.1 }}>{pot.name}</h1>
-            <p className="muted-on">
-              {formatMoney(pot.contribution)} from each member. The lowest bid wins, and what is left is shared.
-            </p>
+            <h1 style={{ fontSize: '2rem', fontWeight: 850, lineHeight: 1.1 }}>{pot.name}</h1>
+            <p className="muted-on">{formatMoney(pot.contribution)} from each member. The lowest bid wins, and what is left is shared.</p>
+            <div>
+              <p className="muted-on">{open ? 'In the pot so far' : 'The pot'}</p>
+              <p className="big-number">{formatMoney(pot.potAmount)}</p>
+            </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <p className="muted-on">{open ? 'In the pot so far' : 'The pot'}</p>
-            <p className="big-number">{formatMoney(pot.potAmount)}</p>
-          </div>
+          <PotArt level={levelFor(pot)} size={150} />
         </div>
         <div className="stat-strip">
           <div className="stat">
@@ -97,35 +111,17 @@ export default async function PotPage({
           </div>
 
           {!mine && (
-            code ? (
-              <div className="stack-sm">
-                <p>You are invited to this pot. Joining takes <strong>{formatMoney(pot.contribution)}</strong> from your wallet right away.</p>
-                {pot.joinProblem && (
-                  <p className="notice notice-error">
-                    Your last payment did not go through: {pot.joinProblem}. <Link href="/wallet" style={{ fontWeight: 700 }}>Add money to your wallet</Link> and try again.
-                  </p>
-                )}
-                <form action={joinPot} className="cluster">
-                  <input type="hidden" name="potId" value={pot.id} />
-                  <input type="hidden" name="inviteCode" value={code} />
-                  <SubmitButton>Join and pay {formatMoney(pot.contribution)}</SubmitButton>
-                </form>
-              </div>
-            ) : (
-              <p className="notice">This pot is by invitation only. Ask its owner for the invite link.</p>
-            )
+            <p className="notice">This pot is by invitation only. Ask its owner for the invite code, then enter it under{' '}
+              <Link href="/pots" style={{ fontWeight: 700 }}>Join with a code</Link>.</p>
           )}
 
           {mine?.status === 'PENDING' && <p className="notice">Your payment of {formatMoney(pot.contribution)} is being processed...</p>}
-
-          {mine?.status === 'ACTIVE' && (
-            <p className="notice">You are in: your {formatMoney(pot.contribution)} is in the pot.</p>
-          )}
+          {mine?.status === 'ACTIVE' && <p className="notice">You are in: your {formatMoney(pot.contribution)} is in the pot.</p>}
 
           {isOwner && pot.inviteCode && (
             <div className="stack-sm">
-              <p className="label">Invite people with this private link</p>
-              <InviteLink potId={pot.id} code={pot.inviteCode} />
+              <p className="label">Invite people with this code</p>
+              <InviteCode code={pot.inviteCode} name={pot.name} />
             </div>
           )}
 

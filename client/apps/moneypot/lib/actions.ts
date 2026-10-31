@@ -91,22 +91,30 @@ export async function createPot(_: FormState, formData: FormData): Promise<FormS
 /** Runs one action on a pot, then shows the pot again (with the error, if there was one). */
 async function onPot(formData: FormData, run: (potId: string) => Promise<unknown>) {
   const potId = String(formData.get('potId'));
-  const code = String(formData.get('inviteCode') ?? '');
   const here = `/pots/${potId}`;
-  await requireUser(code ? `${here}?code=${encodeURIComponent(code)}` : here);
+  await requireUser(here);
   try {
     await run(potId);
   } catch (error) {
-    redirect(`${here}?${code ? `code=${encodeURIComponent(code)}&` : ''}error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`${here}?error=${encodeURIComponent(errorMessage(error))}`);
   }
   revalidatePath(here);
   redirect(here);
 }
 
-/** Joins with the invite code from the link; the contribution is taken from the wallet. */
-export async function joinPot(formData: FormData) {
+/** Joins with just the invite code; the contribution is taken from the wallet. */
+export async function joinByCode(formData: FormData) {
   const inviteCode = String(formData.get('inviteCode') ?? '');
-  await onPot(formData, (potId) => api().pots.joinPot({ potId, ...(inviteCode ? { inviteCode } : {}) }));
+  const here = `/join/${inviteCode}`;
+  await requireUser(here);
+  let potId: string;
+  try {
+    potId = (await api().pots.joinPotByCode({ inviteCode })).id;
+  } catch (error) {
+    redirect(`${here}?error=${encodeURIComponent(errorMessage(error))}`);
+  }
+  revalidatePath('/pots');
+  redirect(`/pots/${potId}`);
 }
 
 /** Leaves before bidding starts and gets the contribution back. */

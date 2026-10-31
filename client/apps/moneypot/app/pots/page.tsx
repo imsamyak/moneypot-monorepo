@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Icon } from '@/components/icons';
+import { JoinWithCode } from '@/components/JoinWithCode';
 import { PotCard } from '@/components/PotCard';
 import { api } from '@/lib/sdk';
 import { requireUser } from '@/lib/session';
@@ -16,19 +17,30 @@ export default async function PotsPage() {
         <div className="between">
           <div className="stack-sm">
             <span className="chip chip-glass" style={{ justifySelf: 'start' }}><Icon name="users" size={14} /> Your pots</span>
-            <h1 style={{ fontSize: '1.9rem', fontWeight: 850, lineHeight: 1.1 }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 850, lineHeight: 1.1 }}>
               {mine.items.length === 0 ? 'Start your first pot' : `${running} running, ${joining} still joining`}
             </h1>
-            <p className="muted-on">Pots are by invitation. Create one and share its link, or open a link someone sent you.</p>
+            <p className="muted-on">Pots are by invitation. Create one and share its code, or enter a code you were given.</p>
           </div>
           <Link href="/pots/new" className="btn btn-white btn-lg"><Icon name="plus" size={18} /> Create a pot</Link>
         </div>
       </section>
 
+      <section className="card stack-sm">
+        <div className="cluster" style={{ gap: '0.7rem' }}>
+          <span className="icon-bubble icon-bubble-gold"><Icon name="gift" /></span>
+          <div>
+            <h2 className="section-title">Join with a code</h2>
+            <p className="muted small">Someone invited you? Enter the code they sent.</p>
+          </div>
+        </div>
+        <JoinWithCode />
+      </section>
+
       {mine.items.length === 0 ? (
         <div className="card card-flat stack-sm">
           <h2 className="section-title">Nothing here yet</h2>
-          <p className="muted">You are not in a pot. Create one, or ask a friend for their invite link and open it to join.</p>
+          <p className="muted">You are not in a pot. Create one, or join with a code above.</p>
         </div>
       ) : (
         <section className="stack">
