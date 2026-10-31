@@ -1,10 +1,10 @@
 import { useCase } from '@moneypot/sdk-core';
-import { createPotBody, listPotsQuery, placeBidBody, potParams } from './schemas.js';
+import { createPotBody, joinPotBody, placeBidBody, potParams } from './schemas.js';
 import type { PotListResponse, PotResponse, SocketTicketResponse } from './types.js';
 
 export type * from './types.js';
 
-/** The caller becomes the owner and the first member. */
+/** The caller becomes the owner and the first member, and pays their contribution at once. */
 export const createPot = useCase('CreatePot')
   .service('pot')
   .post('/api/pots')
@@ -13,11 +13,10 @@ export const createPot = useCase('CreatePot')
   .authRequired()
   .build();
 
-/** `scope: 'open'` (default) lists the pots that can still be joined; `'mine'` the caller's own. */
+/** The pots the caller is in. Pots are by invitation only, so there is no list of other pots. */
 export const listPots = useCase('ListPots')
   .service('pot')
   .get('/api/pots')
-  .query(listPotsQuery)
   .returns<PotListResponse>()
   .authRequired()
   .build();
@@ -30,18 +29,20 @@ export const getPot = useCase('GetPot')
   .authRequired()
   .build();
 
+/** Joins with the invite code and pays the contribution. Possible until the pot's start time. */
 export const joinPot = useCase('JoinPot')
   .service('pot')
   .post('/api/pots/{potId}/join')
   .params(potParams)
+  .body(joinPotBody)
   .returns<PotResponse>()
   .authRequired()
   .build();
 
-/** Owner only, and only when the pot is full. Round 1 opens and every member is asked for their contribution. */
-export const startPot = useCase('StartPot')
+/** Leaves and gets the contribution back. Possible until the pot's start time; not for the owner. */
+export const leavePot = useCase('LeavePot')
   .service('pot')
-  .post('/api/pots/{potId}/start')
+  .post('/api/pots/{potId}/leave')
   .params(potParams)
   .returns<PotResponse>()
   .authRequired()
@@ -89,7 +90,7 @@ export const potUseCases = [
   listPots,
   getPot,
   joinPot,
-  startPot,
+  leavePot,
   payContribution,
   placeBid,
   settleRound,

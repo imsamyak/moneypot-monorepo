@@ -7,7 +7,7 @@ export interface AccountResponse {
 export interface LedgerEntryResponse {
   id: string;
   type: 'CREDIT' | 'DEBIT';
-  kind: 'DEPOSIT' | 'CONTRIBUTION' | 'PAYOUT' | 'DIVIDEND';
+  kind: 'DEPOSIT' | 'CONTRIBUTION' | 'PAYOUT' | 'DIVIDEND' | 'REFUND';
   amount: number;
   balanceAfter: number;
   createdAt: string;

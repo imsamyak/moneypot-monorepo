@@ -17,7 +17,7 @@ const backend: Record<string, string> = {
   ListPots: 'GET /api/pots',
   GetPot: 'GET /api/pots/{potId}',
   JoinPot: 'POST /api/pots/{potId}/join',
-  StartPot: 'POST /api/pots/{potId}/start',
+  LeavePot: 'POST /api/pots/{potId}/leave',
   PayContribution: 'POST /api/pots/{potId}/contribution',
   PlaceBid: 'POST /api/pots/{potId}/bids',
   SettleRound: 'POST /api/pots/{potId}/settle',
