@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { logout } from '@/lib/actions';
 import { getUser } from '@/lib/session';
-import { Icon } from '@/components/icons';
 import { Logo } from '@/components/Logo';
 import { NavLink } from '@/components/NavLink';
 import Link from 'next/link';
@@ -37,9 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               ) : (
                 <>
                   <Link href="/login" className="btn">Sign in</Link>
-                  <Link href="/register" className="btn btn-primary">
-                    <Icon name="bolt" size={16} /> Get started
-                  </Link>
+                  <Link href="/register" className="btn btn-primary">Get started</Link>
                 </>
               )}
             </div>

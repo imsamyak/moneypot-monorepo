@@ -16,7 +16,7 @@ export function Calculator() {
 
   return (
     <div className="two-col">
-      <div className="stack">
+      <div className="card stack">
         <div>
           <label className="label" htmlFor="calc-members">Members: <strong>{members}</strong></label>
           <input id="calc-members" type="range" min={3} max={30} value={members} onChange={(e) => setMembers(Number(e.target.value))} />
@@ -38,26 +38,26 @@ export function Calculator() {
         </div>
       </div>
 
-      <div className="hero-card stack">
+      <div className="card stack">
         <div>
-          <p className="muted-on">The pot this round</p>
+          <p className="muted small">The pot this round</p>
           <p className="big-number">{formatMoney(pot)}</p>
         </div>
         <div className="split-bar" aria-hidden="true">
-          <div style={{ width: `${percent}%`, background: '#ffc439' }} />
-          <div style={{ width: `${100 - percent}%`, background: '#7cc4ff' }} />
+          <div style={{ width: `${percent}%`, background: 'var(--brand)' }} />
+          <div style={{ width: `${100 - percent}%`, background: '#d99a00' }} />
         </div>
         <div className="between">
           <div>
-            <p className="eyebrow" style={{ color: '#ffe08a' }}>Collector gets</p>
-            <p style={{ fontSize: '1.4rem', fontWeight: 800 }}>{formatMoney(bid)}</p>
+            <p className="eyebrow">Collector gets</p>
+            <p style={{ fontSize: '1.3rem', fontWeight: 700 }}>{formatMoney(bid)}</p>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p className="eyebrow" style={{ color: '#bfe0ff' }}>Each of the other {members - 1}</p>
-            <p style={{ fontSize: '1.4rem', fontWeight: 800 }}>+{formatMoney(share)}</p>
+            <p className="eyebrow">Each of the other {members - 1}</p>
+            <p style={{ fontSize: '1.3rem', fontWeight: 700 }}>+{formatMoney(share)}</p>
           </div>
         </div>
-        <p className="muted-on small">After {members} rounds everyone has collected once, and in every other round they got a share of what the collector left.</p>
+        <p className="muted small">After {members} rounds everyone has collected once, and in every other round they got a share of what the collector left.</p>
       </div>
     </div>
   );

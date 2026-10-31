@@ -88,6 +88,18 @@ export async function createPot(_: FormState, formData: FormData): Promise<FormS
   redirect(`/pots/${potId}`);
 }
 
+/** Starts a practice pot with simulated members and play money, so a new member can try the whole game alone. */
+export async function createDemoPot() {
+  await requireUser('/pots');
+  let potId: string;
+  try {
+    potId = (await api().pots.createDemoPot()).id;
+  } catch (error) {
+    redirect(`/pots?error=${encodeURIComponent(errorMessage(error))}`);
+  }
+  redirect(`/pots/${potId}`);
+}
+
 /** Runs one action on a pot, then shows the pot again (with the error, if there was one). */
 async function onPot(formData: FormData, run: (potId: string) => Promise<unknown>) {
   const potId = String(formData.get('potId'));

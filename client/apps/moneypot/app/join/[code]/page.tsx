@@ -2,9 +2,7 @@ import Link from 'next/link';
 import { SdkHttpError, type PotResponse } from '@moneypot/platform-sdk';
 import { redirect } from 'next/navigation';
 import { Countdown } from '@/components/Countdown';
-import { Icon } from '@/components/icons';
 import { JoinWithCode } from '@/components/JoinWithCode';
-import { PotArt } from '@/components/PotArt';
 import { SubmitButton } from '@/components/SubmitButton';
 import { joinByCode } from '@/lib/actions';
 import { formatDateTime, formatDuration, formatMoney } from '@/lib/format';
@@ -32,9 +30,8 @@ export default async function JoinPage({
 
   if (!pot) {
     return (
-      <div className="card stack" style={{ maxWidth: '34rem', margin: '1rem auto', textAlign: 'center' }}>
-        <div style={{ justifySelf: 'center', opacity: 0.5 }}><PotArt level={0.06} size={110} /></div>
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 850 }}>That code does not match a pot</h1>
+      <div className="card stack" style={{ maxWidth: '32rem', margin: '1rem auto' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700 }}>That code does not match a pot</h1>
         <p className="muted">Check it for typos, or ask the owner to send it again.</p>
         <JoinWithCode initial={code} />
       </div>
@@ -47,16 +44,11 @@ export default async function JoinPage({
   const enough = wallet.balance >= pot.contribution;
 
   return (
-    <div className="stack" style={{ maxWidth: '44rem', margin: '0 auto' }}>
-      <section className="hero-card">
-        <div className="between" style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
-          <div className="stack-sm">
-            <span className="chip chip-glass" style={{ justifySelf: 'start' }}><Icon name="gift" size={14} /> You are invited</span>
-            <h1 style={{ fontSize: '2rem', fontWeight: 850, lineHeight: 1.1 }}>{pot.name}</h1>
-            <p className="muted-on">{pot.memberCount} {pot.memberCount === 1 ? 'person has' : 'people have'} joined so far.</p>
-          </div>
-          <PotArt level={Math.min(1, 0.15 + (pot.memberCount / 10) * 0.85)} size={110} />
-        </div>
+    <div className="stack" style={{ maxWidth: '40rem', margin: '0 auto' }}>
+      <section className="card">
+        <span className="chip">You are invited</span>
+        <h1 style={{ fontSize: '1.6rem', fontWeight: 700, margin: '0.5rem 0 0.2rem' }}>{pot.name}</h1>
+        <p className="muted">{pot.memberCount} {pot.memberCount === 1 ? 'person has' : 'people have'} joined so far.</p>
         <div className="stat-strip">
           <div className="stat"><div className="stat-label">You pay</div><div className="stat-value">{formatMoney(pot.contribution)}</div></div>
           <div className="stat"><div className="stat-label">Bidding starts</div><div className="stat-value" style={{ fontSize: '1rem' }}>{open ? <Countdown endsAt={pot.startsAt} doneText="Starting now" suffix="" /> : 'Started'}</div></div>

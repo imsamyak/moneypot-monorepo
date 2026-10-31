@@ -15,6 +15,9 @@ A savings-pot platform, by invitation only.
 Example: 10 members paid Rs 5,000 each, so the pot is Rs 50,000. Asha bids Rs 41,000 and collects it. The Rs 9,000 she left is
 shared by the other nine: Rs 1,000 each.
 
+**Demo pot:** a new member can start a practice pot with one click: four simulated members, play money (the wallet is not
+used), and bidding open at once, so the whole game can be tried alone.
+
 ## How it is built
 
 The same structure as the shop: hexagonal services, the transactional outbox and inbox, one class per use case.

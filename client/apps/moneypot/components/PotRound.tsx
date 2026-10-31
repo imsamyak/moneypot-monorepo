@@ -4,7 +4,6 @@ import { payContribution, settleRound } from '@/lib/actions';
 import { formatMoney } from '@/lib/format';
 import { Avatar, MemberTag } from './Avatar';
 import { BidForm } from './BidForm';
-import { Confetti } from './Confetti';
 import { Countdown } from './Countdown';
 import { Icon } from './icons';
 import { Stepper } from './Stepper';
@@ -117,8 +116,7 @@ export function PotRound({ pot, round, me, isOwner }: { pot: PotResponse; round:
       )}
 
       {round.status === 'SETTLING' && round.winnerId && round.payout !== null && (
-        <div className="hero-card">
-          <Confetti />
+        <div className="card card-flat">
           <div className="cluster" style={{ gap: '0.8rem' }}>
             <span className="icon-bubble icon-bubble-gold"><Icon name="trophy" size={22} /></span>
             <div>

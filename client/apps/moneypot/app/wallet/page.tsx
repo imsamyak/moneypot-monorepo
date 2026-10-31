@@ -30,7 +30,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
             <p className="muted-on cluster" style={{ gap: '0.4rem' }}><Icon name="wallet" size={18} /> Wallet balance</p>
             <p className="big-number" style={{ marginTop: '0.3rem' }}>{formatMoney(wallet.balance)}</p>
           </div>
-          <Link href="/pots" className="btn btn-glass">Go to pots</Link>
+          <Link href="/pots" className="btn">Go to pots</Link>
         </div>
       </div>
 
