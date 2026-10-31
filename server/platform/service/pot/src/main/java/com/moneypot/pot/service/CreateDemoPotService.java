@@ -16,7 +16,7 @@ import java.time.Instant;
 
 /**
  * Creates a practice pot so a new member can try the whole game alone: Rs 1,000 each, five members (the member and four
- * simulated ones), a 10 minute bidding window, bidding open straight away. Nothing is asked of the wallet.
+ * simulated ones), a 5 minute bidding window, bidding open straight away. Nothing is asked of the wallet.
  */
 @Service
 @Validated
@@ -25,7 +25,7 @@ public class CreateDemoPotService implements CreateDemoPotUseCase {
 
    private static final long CONTRIBUTION = 100_000L;
    private static final int MIN_BID_PERCENT = 60;
-   private static final int BID_WINDOW_SECONDS = 600;
+   private static final int BID_WINDOW_SECONDS = 300;
 
    private final SavePotPort savePotPort;
    private final DemoSupport demoSupport;

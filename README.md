@@ -28,7 +28,7 @@ The same structure as the shop: hexagonal services, the transactional outbox and
   - `service/identity` (9086) sign-up, login, JWT
   - `service/wallet` (9081) one account per member and per pot, an append-only ledger, atomic transfers
   - `service/pot` (9082) pots, members, rounds, bids; starts pots at their start time and settles rounds; tells watching pages about changes (WebSocket)
-  - `bootstrap/local` Postgres and RabbitMQ for development, and `e2e.py`
+- `bootstrap/local` Postgres and RabbitMQ for development, the dev-service runner, and `e2e.py`
 - `client`
   - `packages/sdk-core` the engine behind the typed SDK, `packages/config` shared TypeScript settings
   - `service-sdk/platform` `@moneypot/platform-sdk`, one use case per endpoint
@@ -52,10 +52,10 @@ Money is always a whole number of **paise** in the services; the pages show rupe
 You need Java 21, Maven, Node 20+, pnpm and Docker.
 
 ```
-server/platform/bootstrap/local/local.ps1 up              # Postgres (5433) and RabbitMQ (5673)
-server/platform/bootstrap/local/dev-service.ps1 identity  # one window each
-server/platform/bootstrap/local/dev-service.ps1 wallet
-server/platform/bootstrap/local/dev-service.ps1 pot
+bootstrap/local/local.ps1 up              # Postgres (5433) and RabbitMQ (5673)
+bootstrap/local/dev-service.ps1 identity  # one window each
+bootstrap/local/dev-service.ps1 wallet
+bootstrap/local/dev-service.ps1 pot
 pnpm install
 pnpm --filter @moneypot/web dev                           # http://localhost:3100
 ```
@@ -64,7 +64,7 @@ The ports differ from the shop's, so both projects can run on one machine. To us
 `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`, `RABBITMQ_VHOST` and `RABBITMQ_SSL` in a git-ignored `.env`
 at the repository root; the exchanges and queues are named `moneypot...`, so they do not clash with another project.
 
-With the services running, `python server/platform/bootstrap/local/e2e.py` plays a whole three-member pot through them.
+With the services running, `python bootstrap/local/e2e.py` plays a whole three-member pot through them.
 
 ## Tests
 

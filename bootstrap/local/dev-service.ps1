@@ -13,11 +13,12 @@ param(
   [string]$Name
 )
 
-$root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$root = Join-Path $repo 'server\platform'
 
 # The RabbitMQ settings live in the repo-root .env (git-ignored). Only RABBITMQ_ values are passed on to the service, and they
 # win over anything already set on the machine.
-$envFile = Join-Path $root '..\..\.env'
+$envFile = Join-Path $repo '.env'
 if (Test-Path $envFile) {
   foreach ($line in Get-Content $envFile) {
     if ($line -match '^\s*(RABBITMQ_[A-Z_]+)\s*=\s*"?([^"\r\n]*)"?\s*$') { Set-Item -Path "Env:$($Matches[1])" -Value $Matches[2].Trim() }
