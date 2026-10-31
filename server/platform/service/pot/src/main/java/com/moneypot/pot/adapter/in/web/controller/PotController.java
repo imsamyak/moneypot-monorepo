@@ -1,6 +1,7 @@
 package com.moneypot.pot.adapter.in.web.controller;
 
 import com.moneypot.pot.adapter.in.web.controller.dto.request.CreatePotRequest;
+import com.moneypot.pot.adapter.in.web.controller.dto.request.JoinPotRequest;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotListResponse;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotResponse;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.SocketTicketResponse;
@@ -8,11 +9,11 @@ import com.moneypot.pot.port.in.usecase.CreatePotUseCase;
 import com.moneypot.pot.port.in.usecase.GetPotUseCase;
 import com.moneypot.pot.port.in.usecase.IssueSocketTicketUseCase;
 import com.moneypot.pot.port.in.usecase.JoinPotUseCase;
+import com.moneypot.pot.port.in.usecase.LeavePotUseCase;
 import com.moneypot.pot.port.in.usecase.ListPotsUseCase;
-import com.moneypot.pot.port.in.usecase.StartPotUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.IssueSocketTicketCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.JoinPotCmd;
-import com.moneypot.pot.port.in.usecase.dto.command.StartPotCmd;
+import com.moneypot.pot.port.in.usecase.dto.command.LeavePotCmd;
 import com.moneypot.pot.port.in.usecase.dto.query.GetPotQuery;
 import com.moneypot.pot.port.in.usecase.dto.query.ListPotsQuery;
 import com.moneypot.security.Caller;
@@ -26,13 +27,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
-/** Creating, finding, joining and starting pots. The signed-in member is always the one acting. */
+/**
+ * Creating, finding, joining and leaving pots. The signed-in member is always the one acting. Pots are by invitation
+ * only: the owner shares the invite code, and joining needs it.
+ */
 @RestController
 @RequestMapping("/pots")
 @RequireRole({UserRole.ROLE_MEMBER, UserRole.ROLE_ADMIN})
@@ -43,19 +46,20 @@ public class PotController {
    private final ListPotsUseCase listPotsUseCase;
    private final GetPotUseCase getPotUseCase;
    private final JoinPotUseCase joinPotUseCase;
-   private final StartPotUseCase startPotUseCase;
+   private final LeavePotUseCase leavePotUseCase;
    private final IssueSocketTicketUseCase issueSocketTicketUseCase;
 
+   /** The owner becomes the first member and pays their contribution at once. */
    @PostMapping
    @ResponseStatus(HttpStatus.CREATED)
    public PotResponse create(@Valid @RequestBody CreatePotRequest request) {
       return PotResponse.from(createPotUseCase.execute(request.toCommand(Caller.userId())).pot());
    }
 
-   /** {@code scope=open} (default) lists the pots that can still be joined; {@code scope=mine} the member own pots. */
+   /** The pots the caller is in. */
    @GetMapping
-   public PotListResponse list(@RequestParam(defaultValue = "open") String scope) {
-      return PotListResponse.from(listPotsUseCase.execute(new ListPotsQuery(Caller.userId(), "mine".equals(scope))));
+   public PotListResponse list() {
+      return PotListResponse.from(listPotsUseCase.execute(new ListPotsQuery(Caller.userId())));
    }
 
    @GetMapping("/{potId}")
@@ -63,19 +67,22 @@ public class PotController {
       return PotResponse.from(getPotUseCase.execute(new GetPotQuery(potId, Caller.userId())));
    }
 
+   /** Joins with the invite code and pays the contribution; possible until bidding starts. */
    @PostMapping("/{potId}/join")
-   public PotResponse join(@PathVariable UUID potId) {
-      return PotResponse.from(joinPotUseCase.execute(new JoinPotCmd(potId, Caller.userId())));
+   public PotResponse join(@PathVariable UUID potId, @RequestBody(required = false) JoinPotRequest request) {
+      String code = request == null ? null : request.inviteCode();
+      return PotResponse.from(joinPotUseCase.execute(new JoinPotCmd(potId, Caller.userId(), code)).pot());
+   }
+
+   /** Leaves and gets the contribution back; possible until bidding starts. */
+   @PostMapping("/{potId}/leave")
+   public PotResponse leave(@PathVariable UUID potId) {
+      return PotResponse.from(leavePotUseCase.execute(new LeavePotCmd(potId, Caller.userId())).pot());
    }
 
    /** A one-time ticket to open the live connection of this pot (members only); see {@code /api/ws/pots}. */
    @PostMapping("/{potId}/socket-ticket")
    public SocketTicketResponse socketTicket(@PathVariable UUID potId) {
       return SocketTicketResponse.from(issueSocketTicketUseCase.execute(new IssueSocketTicketCmd(potId, Caller.userId())));
-   }
-
-   @PostMapping("/{potId}/start")
-   public PotResponse start(@PathVariable UUID potId) {
-      return PotResponse.from(startPotUseCase.execute(new StartPotCmd(potId, Caller.userId())).pot());
    }
 }

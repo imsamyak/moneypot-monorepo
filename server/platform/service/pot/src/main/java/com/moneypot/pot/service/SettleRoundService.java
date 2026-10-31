@@ -1,6 +1,7 @@
 package com.moneypot.pot.service;
 
 import com.moneypot.pot.domain.entity.Pot;
+import com.moneypot.pot.domain.entity.PotMember;
 import com.moneypot.pot.domain.entity.Round;
 import com.moneypot.pot.domain.entity.RoundStatus;
 import com.moneypot.pot.domain.exception.PotNotFoundException;
@@ -57,7 +58,7 @@ public class SettleRoundService implements SettleRoundUseCase {
       }
 
       List<PotChangeResult.TransferRequest> requests =
-            roundSupport.settle(pot, round, loadMemberPort.loadByPotId(pot.getId()));
+            roundSupport.settle(pot, round, loadMemberPort.loadByPotId(pot.getId()).stream().filter(PotMember::isActive).toList());
       notifyPotChangedPort.potChanged(pot.getId());
       return new PotChangeResult(potAssembler.assemble(pot, null), requests);
    }

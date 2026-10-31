@@ -51,7 +51,7 @@ public class PlaceBidService implements PlaceBidUseCase {
             .orElseThrow(() -> BusinessRuleException.of("Bidding is not open"));
 
       PotMember member = loadMemberPort.loadByPotId(pot.getId()).stream()
-            .filter(m -> m.getUserId().equals(cmd.userId()))
+            .filter(m -> m.getUserId().equals(cmd.userId()) && m.isActive())
             .findFirst()
             .orElseThrow(() -> ForbiddenException.of("Only members of the pot can bid"));
       if (member.isWon()) {

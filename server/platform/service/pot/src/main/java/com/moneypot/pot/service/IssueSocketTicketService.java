@@ -27,7 +27,7 @@ public class IssueSocketTicketService implements IssueSocketTicketUseCase {
    @Transactional(readOnly = true)
    public SocketTicketResult execute(IssueSocketTicketCmd cmd) {
       loadPotPort.loadById(cmd.potId()).orElseThrow(() -> PotNotFoundException.of(cmd.potId()));
-      boolean member = loadMemberPort.loadByPotId(cmd.potId()).stream().anyMatch(m -> m.getUserId().equals(cmd.userId()));
+      boolean member = loadMemberPort.loadByPotId(cmd.potId()).stream().anyMatch(m -> m.getUserId().equals(cmd.userId()) && !m.isLeft());
       if (!member) {
          throw ForbiddenException.of("Only members of the pot can watch it live");
       }

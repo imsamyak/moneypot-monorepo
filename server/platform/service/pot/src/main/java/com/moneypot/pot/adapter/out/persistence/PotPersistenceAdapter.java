@@ -1,13 +1,15 @@
 package com.moneypot.pot.adapter.out.persistence;
 
 import com.moneypot.pot.domain.entity.Pot;
-import com.moneypot.pot.port.out.persistence.LoadPotPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
+import com.moneypot.pot.port.out.persistence.LoadPotPort;
 import com.moneypot.pot.port.out.persistence.SavePotPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,14 +28,14 @@ public class PotPersistenceAdapter implements LoadPotPort, LoadPotForUpdatePort,
 
    @Override
    @Transactional(readOnly = true)
-   public List<Pot> loadOpen() {
-      return repository.findOpen();
+   public List<Pot> loadByMember(UUID userId) {
+      return repository.findByMember(userId);
    }
 
    @Override
    @Transactional(readOnly = true)
-   public List<Pot> loadByMember(UUID userId) {
-      return repository.findByMember(userId);
+   public List<Pot> loadOpenStartingBefore(Instant now, int limit) {
+      return repository.findOpenStartingBefore(now, PageRequest.of(0, limit));
    }
 
    @Override

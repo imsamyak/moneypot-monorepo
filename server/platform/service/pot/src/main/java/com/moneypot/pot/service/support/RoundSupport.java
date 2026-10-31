@@ -17,11 +17,12 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * The two things that start a stretch of the round, shared by the use cases that need them: opening a round (ask every
- * member for their contribution) and settling it (decide the winner, then ask the pot to pay the winner and the other
- * members). Each returns the money movements to request from the wallet.
+ * The things that ask the wallet to move money, shared by the use cases that need them: one payment (a member joining,
+ * a refund), opening a round (ask every member for their contribution) and settling it (decide the winner, then ask the
+ * pot to pay the winner and the other members). Each returns the money movements to request from the wallet.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,7 +32,13 @@ public class RoundSupport {
    private final SaveTransferPort saveTransferPort;
    private final LoadBidPort loadBidPort;
 
-   /** Opens the pot's current round and asks every member for their contribution. */
+   /** Asks the wallet for one movement between the pot and a member. */
+   public TransferRequest requestPayment(Pot pot, Round round, UUID userId, TransferKind kind, long amount) {
+      RoundTransfer transfer = saveTransferPort.save(RoundTransfer.request(pot.getId(), round.getId(), userId, kind, amount));
+      return toRequest(transfer);
+   }
+
+   /** Opens the pot's current round and asks every member for their contribution. {@code members} are the ones who count. */
    public List<TransferRequest> openRound(Pot pot, List<PotMember> members) {
       Round round = saveRoundPort.save(Round.open(pot.getId(), pot.getCurrentRound()));
       List<RoundTransfer> transfers = members.stream()
@@ -53,7 +60,7 @@ public class RoundSupport {
       List<RoundTransfer> transfers = new ArrayList<>();
       transfers.add(RoundTransfer.request(pot.getId(), round.getId(), settlement.winnerId(), TransferKind.PAYOUT,
             settlement.payout()));
-      for (Map.Entry<java.util.UUID, Long> dividend : settlement.dividends().entrySet()) {
+      for (Map.Entry<UUID, Long> dividend : settlement.dividends().entrySet()) {
          transfers.add(RoundTransfer.request(pot.getId(), round.getId(), dividend.getKey(), TransferKind.DIVIDEND,
                dividend.getValue()));
       }
@@ -61,7 +68,7 @@ public class RoundSupport {
       return transfers.stream().map(RoundSupport::toRequest).toList();
    }
 
-   private static TransferRequest toRequest(RoundTransfer transfer) {
+   public static TransferRequest toRequest(RoundTransfer transfer) {
       return new TransferRequest(transfer.getId(), transfer.getRoundId(), transfer.getUserId(), transfer.getKind(),
             transfer.getAmount());
    }
