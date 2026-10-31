@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { logout } from '@/lib/actions';
 import { getUser } from '@/lib/session';
+import { Icon } from '@/components/icons';
+import { Logo } from '@/components/Logo';
+import { NavLink } from '@/components/NavLink';
+import Link from 'next/link';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,21 +17,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
-        <header style={{ borderBottom: '1px solid var(--line)', background: 'var(--card)' }}>
-          <div className="page" style={{ paddingTop: '0.9rem', paddingBottom: '0.9rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <Link href="/" style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--brand)' }}>
-              MoneyPot
-            </Link>
+        <header className="header">
+          <div className="header-inner">
+            <Logo />
             {user && (
-              <nav style={{ display: 'flex', gap: '1.1rem', fontWeight: 600 }}>
-                <Link href="/pots">Pots</Link>
-                <Link href="/wallet">Wallet</Link>
+              <nav className="nav">
+                <NavLink href="/pots">Pots</NavLink>
+                <NavLink href="/wallet">Wallet</NavLink>
               </nav>
             )}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <div className="who">
               {user ? (
                 <>
-                  <span className="muted" style={{ fontSize: '0.9rem' }}>{user.email}</span>
+                  <span className="who-email">{user.email}</span>
                   <form action={logout}>
                     <button className="btn" type="submit">Sign out</button>
                   </form>
@@ -36,7 +37,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               ) : (
                 <>
                   <Link href="/login" className="btn">Sign in</Link>
-                  <Link href="/register" className="btn btn-primary">Create account</Link>
+                  <Link href="/register" className="btn btn-primary">
+                    <Icon name="bolt" size={16} /> Get started
+                  </Link>
                 </>
               )}
             </div>
