@@ -63,16 +63,23 @@ export async function deposit(_: FormState, formData: FormData): Promise<FormSta
   return { message: 'Added to your wallet.' };
 }
 
+/** Creates a pot. The form sends the start time already as an ISO date (the browser knows the member's time zone). */
 export async function createPot(_: FormState, formData: FormData): Promise<FormState> {
   await requireUser('/pots/new');
+  const startsAt = String(formData.get('startsAt') ?? '');
+  if (!startsAt || Number.isNaN(Date.parse(startsAt))) return { error: 'Choose when bidding starts.' };
+  if (Date.parse(startsAt) <= Date.now()) return { error: 'Bidding must start in the future.' };
+  const bidWindowSeconds = Math.round(Number(formData.get('bidHours') || 0) * 3600 + Number(formData.get('bidMinutes') || 0) * 60);
+  if (!(bidWindowSeconds >= 60)) return { error: 'Bidding must stay open for at least 1 minute.' };
+  if (bidWindowSeconds > 7 * 86400) return { error: 'Bidding can stay open for 7 days (168 hours) at most.' };
   let potId: string;
   try {
     const pot = await api().pots.createPot({
       name: String(formData.get('name') ?? ''),
-      memberCount: Number(formData.get('memberCount')),
       contribution: rupeesToPaise(formData.get('contribution')),
       minBidPercent: Number(formData.get('minBidPercent')),
-      bidWindowSeconds: Math.round(Number(formData.get('bidWindowMinutes')) * 60),
+      bidWindowSeconds,
+      startsAt: new Date(startsAt).toISOString(),
     });
     potId = pot.id;
   } catch (error) {
@@ -84,22 +91,27 @@ export async function createPot(_: FormState, formData: FormData): Promise<FormS
 /** Runs one action on a pot, then shows the pot again (with the error, if there was one). */
 async function onPot(formData: FormData, run: (potId: string) => Promise<unknown>) {
   const potId = String(formData.get('potId'));
-  await requireUser(`/pots/${potId}`);
+  const code = String(formData.get('inviteCode') ?? '');
+  const here = `/pots/${potId}`;
+  await requireUser(code ? `${here}?code=${encodeURIComponent(code)}` : here);
   try {
     await run(potId);
   } catch (error) {
-    redirect(`/pots/${potId}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`${here}?${code ? `code=${encodeURIComponent(code)}&` : ''}error=${encodeURIComponent(errorMessage(error))}`);
   }
-  revalidatePath(`/pots/${potId}`);
-  redirect(`/pots/${potId}`);
+  revalidatePath(here);
+  redirect(here);
 }
 
+/** Joins with the invite code from the link; the contribution is taken from the wallet. */
 export async function joinPot(formData: FormData) {
-  await onPot(formData, (potId) => api().pots.joinPot({ potId }));
+  const inviteCode = String(formData.get('inviteCode') ?? '');
+  await onPot(formData, (potId) => api().pots.joinPot({ potId, ...(inviteCode ? { inviteCode } : {}) }));
 }
 
-export async function startPot(formData: FormData) {
-  await onPot(formData, (potId) => api().pots.startPot({ potId }));
+/** Leaves before bidding starts and gets the contribution back. */
+export async function leavePot(formData: FormData) {
+  await onPot(formData, (potId) => api().pots.leavePot({ potId }));
 }
 
 export async function payContribution(formData: FormData) {

@@ -1,64 +1,59 @@
 import Link from 'next/link';
 import type { PotResponse, RoundResponse } from '@moneypot/platform-sdk';
-import { payContribution, placeBid, settleRound } from '@/lib/actions';
-import { formatMoney, memberLabel } from '@/lib/format';
+import { payContribution, settleRound } from '@/lib/actions';
+import { formatMoney } from '@/lib/format';
+import { Avatar, MemberTag } from './Avatar';
+import { BidForm } from './BidForm';
 import { Countdown } from './Countdown';
+import { Icon } from './icons';
+import { Stepper } from './Stepper';
 import { SubmitButton } from './SubmitButton';
 
 const STEPS = [
-  { status: 'COLLECTING', label: 'Pay in' },
-  { status: 'BIDDING', label: 'Bid' },
-  { status: 'SETTLING', label: 'Payout' },
-] as const;
+  { key: 'COLLECTING', label: 'Pay in' },
+  { key: 'BIDDING', label: 'Bid' },
+  { key: 'SETTLING', label: 'Payout' },
+];
 
-const TRANSFER_LABEL = { REQUESTED: 'Paying...', DONE: 'Paid', REJECTED: 'Not paid' } as const;
+const TRANSFER = {
+  REQUESTED: { label: 'Paying...', chip: 'chip chip-warn' },
+  DONE: { label: 'Paid', chip: 'chip' },
+  REJECTED: { label: 'Not paid', chip: 'chip chip-bad' },
+  VOID: { label: '', chip: 'chip chip-muted' },
+} as const;
 
 /** The running round of a pot: what has been paid, the bids, and what the member can do now. */
 export function PotRound({ pot, round, me, isOwner }: { pot: PotResponse; round: RoundResponse; me: string; isOwner: boolean }) {
   const mine = pot.members.find((m) => m.userId === me);
-  const who = (userId: string) => memberLabel(userId, pot.members, me);
   const contributions = round.transfers.filter((t) => t.kind === 'CONTRIBUTION');
   const myContribution = contributions.find((t) => t.userId === me);
   const lowest = round.bids[0];
   const myBid = round.bids.find((b) => b.userId === me);
+  const order = (userId: string) => pot.members.find((m) => m.userId === userId)?.joinOrder ?? 0;
 
   return (
-    <div className="card" style={{ display: 'grid', gap: '1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-        <h2 style={{ fontWeight: 800, fontSize: '1.2rem' }}>
-          Round {round.number} of {pot.memberCount}
-        </h2>
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          {STEPS.map((step) => (
-            <span key={step.status} className={step.status === round.status ? 'badge' : 'badge badge-warn'} style={{ opacity: step.status === round.status ? 1 : 0.5 }}>
-              {step.label}
-            </span>
-          ))}
-        </div>
+    <div className="card stack">
+      <div className="between">
+        <h2 className="section-title" style={{ fontSize: '1.3rem' }}>Round {round.number} of {pot.memberCount}</h2>
+        <span className="live">Live</span>
       </div>
+      <Stepper steps={STEPS} current={round.status} />
 
       {round.status === 'COLLECTING' && (
         <>
-          <p className="muted">
-            Everyone pays {formatMoney(pot.contribution)} into the pot. Bidding opens when all {pot.memberCount} have paid.
-          </p>
+          <p className="muted">Everyone pays {formatMoney(pot.contribution)} into the pot. Bidding opens when all {pot.memberCount} have paid.</p>
           <div>
             {contributions.map((t) => (
               <div className="row" key={t.userId}>
-                <span>{who(t.userId)}</span>
-                <span className={t.status === 'DONE' ? 'badge' : t.status === 'REJECTED' ? 'badge badge-bad' : 'badge badge-warn'}>
-                  {TRANSFER_LABEL[t.status]}
-                </span>
+                <MemberTag userId={t.userId} members={pot.members} me={me} />
+                <span className={TRANSFER[t.status].chip}>{TRANSFER[t.status].label}</span>
               </div>
             ))}
           </div>
           {myContribution?.status === 'REJECTED' && (
-            <div className="notice notice-error" style={{ display: 'grid', gap: '0.6rem' }}>
-              <span>
-                Your payment did not go through{myContribution.reason ? `: ${myContribution.reason}` : ''}. Add money to your wallet,
-                then pay again.
-              </span>
-              <div style={{ display: 'flex', gap: '0.6rem' }}>
+            <div className="notice notice-error stack-sm">
+              <span>Your payment did not go through{myContribution.reason ? `: ${myContribution.reason}` : ''}. Add money to your wallet, then pay again.</span>
+              <div className="cluster">
                 <Link href="/wallet" className="btn">Open wallet</Link>
                 <form action={payContribution}>
                   <input type="hidden" name="potId" value={pot.id} />
@@ -72,16 +67,16 @@ export function PotRound({ pot, round, me, isOwner }: { pot: PotResponse; round:
 
       {round.status === 'BIDDING' && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="between">
             <div>
-              <p className="muted">{lowest ? 'Lowest bid so far' : 'No bids yet'}</p>
-              <p style={{ fontSize: '1.8rem', fontWeight: 800 }}>{lowest ? formatMoney(lowest.amount) : formatMoney(pot.potAmount)}</p>
-              {!lowest && <p className="muted" style={{ fontSize: '0.85rem' }}>If nobody bids, the next member in order gets the whole pot.</p>}
+              <p className="eyebrow">{lowest ? 'Lowest bid so far' : 'No bids yet'}</p>
+              <p className="big-number">{formatMoney(lowest ? lowest.amount : pot.potAmount)}</p>
+              {!lowest && <p className="muted small">If nobody bids, the next member in order gets the whole pot.</p>}
             </div>
             {round.biddingEndsAt && (
-              <div style={{ textAlign: 'right' }}>
-                <p className="muted">Bidding closes</p>
-                <p style={{ fontWeight: 700 }}><Countdown endsAt={round.biddingEndsAt} /></p>
+              <div className="card card-flat" style={{ textAlign: 'center' }}>
+                <p className="eyebrow cluster" style={{ justifyContent: 'center', gap: '0.3rem' }}><Icon name="clock" size={14} /> Bidding closes in</p>
+                <p style={{ fontSize: '1.3rem', fontWeight: 800 }}><Countdown endsAt={round.biddingEndsAt} suffix="" /></p>
               </div>
             )}
           </div>
@@ -89,33 +84,22 @@ export function PotRound({ pot, round, me, isOwner }: { pot: PotResponse; round:
           {mine?.won ? (
             <p className="notice">You already won round {mine.wonRound}, so you sit this one out. You still get a share of what the winner leaves.</p>
           ) : (
-            <form action={placeBid} style={{ display: 'grid', gap: '0.6rem' }}>
-              <input type="hidden" name="potId" value={pot.id} />
-              <div>
-                <label className="label" htmlFor="amount">{myBid ? 'Lower your bid (₹)' : 'Your bid (₹)'}</label>
-                <input
-                  className="input"
-                  id="amount"
-                  name="amount"
-                  inputMode="decimal"
-                  placeholder={String(Math.round((myBid?.amount ?? pot.potAmount) / 100) - 1)}
-                  required
-                />
-                <p className="muted" style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                  What you will accept for the pot. Between {formatMoney(pot.minBid)} and {formatMoney(pot.potAmount)}.
-                  The lowest bid wins{myBid ? `, and you can only go lower than your bid of ${formatMoney(myBid.amount)}` : ''}.
-                </p>
-              </div>
-              <div><SubmitButton>{myBid ? 'Lower my bid' : 'Place bid'}</SubmitButton></div>
-            </form>
+            <BidForm potId={pot.id} potAmount={pot.potAmount} minBid={pot.minBid} memberCount={pot.memberCount} lowest={lowest?.amount ?? null} mine={myBid?.amount ?? null} />
           )}
 
           {round.bids.length > 0 && (
-            <div>
-              <p className="label">Bids, lowest first</p>
+            <div className="stack-sm">
+              <p className="eyebrow">Bids, lowest first</p>
               {round.bids.map((bid, index) => (
-                <div className="row" key={bid.userId}>
-                  <span>{who(bid.userId)}{index === 0 && <span className="badge" style={{ marginLeft: '0.5rem' }}>leading</span>}</span>
+                <div key={bid.userId} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '0.8rem' }}>
+                  <Avatar order={order(bid.userId)} me={bid.userId === me} size={32} />
+                  <div className="stack-sm" style={{ gap: '0.25rem' }}>
+                    <span style={{ fontWeight: 650 }}>
+                      Member {order(bid.userId)}{bid.userId === me && <span className="muted"> (you)</span>}
+                      {index === 0 && <span className="chip" style={{ marginLeft: '0.5rem' }}>leading</span>}
+                    </span>
+                    <div className="track"><div className={index === 0 ? 'track-fill track-fill-gold' : 'track-fill'} style={{ width: `${Math.min(100, (bid.amount / pot.potAmount) * 100)}%` }} /></div>
+                  </div>
                   <strong>{formatMoney(bid.amount)}</strong>
                 </div>
               ))}
@@ -132,17 +116,21 @@ export function PotRound({ pot, round, me, isOwner }: { pot: PotResponse; round:
       )}
 
       {round.status === 'SETTLING' && round.winnerId && round.payout !== null && (
-        <>
-          <p>
-            <strong>{who(round.winnerId)}</strong> wins this round and gets <strong>{formatMoney(round.payout)}</strong>.
-          </p>
+        <div className="hero-card">
+          <div className="cluster" style={{ gap: '0.8rem' }}>
+            <span className="icon-bubble icon-bubble-gold"><Icon name="trophy" size={22} /></span>
+            <div>
+              <p className="muted-on">Winner of round {round.number}</p>
+              <p style={{ fontSize: '1.4rem', fontWeight: 800 }}>Member {order(round.winnerId)}{round.winnerId === me && ' (you)'} wins {formatMoney(round.payout)}</p>
+            </div>
+          </div>
           {pot.potAmount > round.payout && (
-            <p className="muted">
-              The other {formatMoney(pot.potAmount - round.payout)} is being shared among the other {pot.memberCount - 1} members.
+            <p className="muted-on" style={{ marginTop: '0.8rem' }}>
+              The other {formatMoney(pot.potAmount - round.payout)} is being shared among the other {pot.memberCount - 1} members. The next round
+              starts when everything is paid.
             </p>
           )}
-          <p className="muted">Paying out now. The next round starts when everything is paid.</p>
-        </>
+        </div>
       )}
     </div>
   );
