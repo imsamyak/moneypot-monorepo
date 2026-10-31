@@ -83,7 +83,7 @@ export function PotRound({ pot, round, me, isOwner }: { pot: PotResponse; round:
           </div>
 
           {mine?.won ? (
-            <p className="notice">You already won round {mine.wonRound}, so you sit this one out. You still get a share of what the winner leaves.</p>
+            <p className="notice">You already collected in round {mine.wonRound}, so you sit this one out. You still get a share of what the collector leaves.</p>
           ) : (
             <BidForm potId={pot.id} potAmount={pot.potAmount} minBid={pot.minBid} memberCount={pot.memberCount} lowest={lowest?.amount ?? null} mine={myBid?.amount ?? null} />
           )}
@@ -122,8 +122,8 @@ export function PotRound({ pot, round, me, isOwner }: { pot: PotResponse; round:
           <div className="cluster" style={{ gap: '0.8rem' }}>
             <span className="icon-bubble icon-bubble-gold"><Icon name="trophy" size={22} /></span>
             <div>
-              <p className="muted-on">Winner of round {round.number}</p>
-              <p style={{ fontSize: '1.4rem', fontWeight: 800 }}>Member {order(round.winnerId)}{round.winnerId === me && ' (you)'} wins {formatMoney(round.payout)}</p>
+              <p className="muted-on">Collector of round {round.number}</p>
+              <p style={{ fontSize: '1.4rem', fontWeight: 800 }}>Member {order(round.winnerId)}{round.winnerId === me && ' (you)'} collects {formatMoney(round.payout)}</p>
             </div>
           </div>
           {pot.potAmount > round.payout && (

@@ -71,7 +71,7 @@ export function NewPotForm() {
         <div className="stack-sm">
           <label className="label" htmlFor="minBidPercent">Lowest bid allowed: <strong>{floor}%</strong> of the pot</label>
           <input id="minBidPercent" name="minBidPercent" type="range" min={10} max={100} step={5} value={floor} onChange={(e) => setFloor(Number(e.target.value))} />
-          <p className="muted small">A lower floor means bigger discounts for the winner, and bigger dividends for everyone else.</p>
+          <p className="muted small">A lower floor means the collector can take less, and everyone else gets bigger shares.</p>
         </div>
 
         {state.error && <p className="notice notice-error" role="alert">{state.error}</p>}
@@ -100,7 +100,7 @@ export function NewPotForm() {
           <div className="stat-label">Example with 10 members</div>
           <div className="stat-value">{formatMoney(examplePot)} pot</div>
           <p className="small" style={{ opacity: 0.85 }}>
-            Lowest bid allowed {formatMoney(exampleMinBid)}. If it wins, the other 9 share {formatMoney(examplePot - exampleMinBid)}:
+            Lowest bid allowed {formatMoney(exampleMinBid)}. If someone collects at that bid, the other 9 share {formatMoney(examplePot - exampleMinBid)}:
             {' '}{formatMoney(Math.floor((examplePot - exampleMinBid) / 9))} each.
           </p>
         </div>

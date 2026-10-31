@@ -1,6 +1,6 @@
 # MoneyPot
 
-A savings-pot (kameti) platform, by invitation only.
+A savings-pot platform, by invitation only.
 
 1. Someone **creates a pot**: how much each member pays, how long each round of bidding stays open, and **when bidding
    starts**. There is no limit on members. They get a private **invite code**.
@@ -8,11 +8,11 @@ A savings-pot (kameti) platform, by invitation only.
    it all back**.
 3. At the start time **joining closes** (nobody can join or leave from then on) and whoever has paid is the group.
    Bidding opens straight away. If fewer than two members paid, the pot is cancelled and everyone is refunded.
-4. Each round the members who have not won yet **bid**, and the **lowest bid wins**. The winner gets their bid, and what
-   is left (pot minus bid) goes back to the other members as a dividend. A member who has won cannot win again, so a pot of
-   N members runs N rounds, and the last member left is paid the whole pot.
+4. Each round the members who have not collected yet **bid** the least they will accept, and the **lowest bid collects the
+   pot**. The collector gets their bid, and what is left (pot minus bid) goes back to the other members as a dividend. A member
+   who has collected cannot collect again, so a pot of N members runs N rounds, and the last member left is paid the whole pot.
 
-Example: 10 members paid Rs 5,000 each, so the pot is Rs 50,000. Asha bids Rs 41,000 and wins it. The Rs 9,000 she left is
+Example: 10 members paid Rs 5,000 each, so the pot is Rs 50,000. Asha bids Rs 41,000 and collects it. The Rs 9,000 she left is
 shared by the other nine: Rs 1,000 each.
 
 ## How it is built
@@ -38,7 +38,7 @@ The pot and the wallet only talk through events (RabbitMQ, through the outbox an
 1. When someone joins, the pot sends `Pot.TransferRequested` (a contribution); the wallet moves the money and answers
    `Wallet.TransferCompleted`, or `TransferRejected` when the balance is too low (the member is then not in).
 2. Leaving, or a pot that is cancelled, sends a `REFUND` the same way.
-3. Later rounds: when every contribution is paid bidding opens; when bidding ends the pot asks the wallet to pay the winner
+3. Later rounds: when every contribution is paid bidding opens; when bidding ends the pot asks the wallet to pay the collector
    the bid (`PAYOUT`) and give the others their share (`DIVIDEND`). When all are paid the round is settled and the next one
    starts.
 

@@ -11,7 +11,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
           <strong style={{ fontSize: '1.3rem' }}>MoneyPot</strong>
         </div>
         <div className="stack-sm">
-          <h2 style={{ fontSize: '1.7rem', fontWeight: 800, lineHeight: 1.15 }}>Save together. The lowest bid wins the pot.</h2>
+          <h2 style={{ fontSize: '1.7rem', fontWeight: 800, lineHeight: 1.15 }}>Save together. The lowest bid collects the pot.</h2>
           <p className="muted-on">Everyone pays in, members bid, and what is left is shared back with the group.</p>
         </div>
         <ul className="stack-sm" style={{ listStyle: 'none', padding: 0 }}>

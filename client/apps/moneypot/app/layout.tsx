@@ -9,7 +9,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'MoneyPot',
-  description: 'Save together. Bid for the pot, lowest bid wins, and the rest comes back to the group.',
+  description: 'Save with people you trust. Bid for the pot, the lowest bid collects it, and the rest comes back to the group.',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

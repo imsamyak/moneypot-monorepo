@@ -50,12 +50,12 @@ export function BidForm({
       <p className="muted small">
         {valid ? (
           <>
-            If you win at <strong>{formatMoney(bid)}</strong> you get that, and the other {memberCount - 1} members share{' '}
+            If you collect at <strong>{formatMoney(bid)}</strong> you get that, and the other {memberCount - 1} members share{' '}
             {formatMoney(potAmount - bid)} ({formatMoney(share)} each).
           </>
         ) : (
           <>
-            Between {formatMoney(minBid)} and {formatMoney(potAmount)}. The lowest bid wins
+            Between {formatMoney(minBid)} and {formatMoney(potAmount)}. The lowest bid collects the pot
             {mine ? `, and you can only go lower than your bid of ${formatMoney(mine)}` : ''}.
           </>
         )}

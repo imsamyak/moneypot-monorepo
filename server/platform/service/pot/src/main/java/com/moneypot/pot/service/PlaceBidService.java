@@ -55,7 +55,7 @@ public class PlaceBidService implements PlaceBidUseCase {
             .findFirst()
             .orElseThrow(() -> ForbiddenException.of("Only members of the pot can bid"));
       if (member.isWon()) {
-         throw BusinessRuleException.of("You have already won a round, so you cannot bid again");
+         throw BusinessRuleException.of("You have already collected a round, so you cannot bid again");
       }
       if (cmd.amount() < pot.minBid()) {
          throw BusinessRuleException.of("The lowest bid allowed is " + pot.minBid() + " paise (" + pot.getMinBidPercent() + "% of the pot)");

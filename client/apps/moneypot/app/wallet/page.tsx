@@ -10,8 +10,8 @@ const PAGE_SIZE = 12;
 const KIND = {
   DEPOSIT: { label: 'Top-up', icon: 'plus', tone: '' },
   CONTRIBUTION: { label: 'Paid into a pot', icon: 'up', tone: 'icon-bubble-bad' },
-  PAYOUT: { label: 'Won the pot', icon: 'trophy', tone: 'icon-bubble-gold' },
-  DIVIDEND: { label: 'Share of what the winner left', icon: 'gift', tone: '' },
+  PAYOUT: { label: 'Collected the pot', icon: 'trophy', tone: 'icon-bubble-gold' },
+  DIVIDEND: { label: 'Share of what the collector left', icon: 'gift', tone: '' },
   REFUND: { label: 'Refund from a pot', icon: 'down', tone: '' },
 } as const satisfies Record<string, { label: string; icon: IconName; tone: string }>;
 

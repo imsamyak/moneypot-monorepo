@@ -3,7 +3,7 @@ import { formatMoney } from '@/lib/format';
 import { MemberTag } from './Avatar';
 import { Icon } from './icons';
 
-/** The rounds that are over: who won and what they were paid, and what was shared with everyone else. */
+/** The rounds that are over: who collected and what they were paid, and what was shared with everyone else. */
 export function PotHistory({ pot, me }: { pot: PotResponse; me: string }) {
   if (pot.history.length === 0) return null;
   return (
@@ -21,7 +21,7 @@ export function PotHistory({ pot, me }: { pot: PotResponse; me: string }) {
                   <div style={{ fontWeight: 700 }}>Round {past.number}</div>
                   <MemberTag userId={past.winnerId} members={pot.members} me={me} size={22} />
                   <div className="muted small">
-                    {shared > 0 ? `${formatMoney(shared)} shared among the other ${pot.memberCount - 1} members` : 'Won the whole pot, nothing left to share'}
+                    {shared > 0 ? `${formatMoney(shared)} shared among the other ${pot.memberCount - 1} members` : 'Collected the whole pot, nothing left to share'}
                   </div>
                 </div>
               </div>
