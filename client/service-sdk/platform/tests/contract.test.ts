@@ -14,6 +14,7 @@ const backend: Record<string, string> = {
   Deposit: 'POST /api/wallet/deposit',
   GetLedger: 'GET /api/wallet/ledger',
   CreatePot: 'POST /api/pots',
+  CreateDemoPot: 'POST /api/pots/demo',
   ListPots: 'GET /api/pots',
   GetPot: 'GET /api/pots/{potId}',
   JoinPot: 'POST /api/pots/{potId}/join',

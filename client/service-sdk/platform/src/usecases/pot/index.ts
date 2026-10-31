@@ -13,6 +13,14 @@ export const createPot = useCase('CreatePot')
   .authRequired()
   .build();
 
+/** A practice pot: four simulated members, play money, bidding open at once. The wallet is not used. */
+export const createDemoPot = useCase('CreateDemoPot')
+  .service('pot')
+  .post('/api/pots/demo')
+  .returns<PotResponse>()
+  .authRequired()
+  .build();
+
 /** The pots the caller is in. Pots are by invitation only, so there is no list of other pots. */
 export const listPots = useCase('ListPots')
   .service('pot')
@@ -105,6 +113,7 @@ export const issueSocketTicket = useCase('IssueSocketTicket')
 
 export const potUseCases = [
   createPot,
+  createDemoPot,
   listPots,
   getPot,
   getPotByInvite,

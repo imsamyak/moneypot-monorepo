@@ -67,6 +67,8 @@ export interface PotResponse {
   inviteCode: string | null;
   /** Why the viewer is not in, when their payment was refused (for example "Insufficient funds"). */
   joinProblem: string | null;
+  /** A practice pot: the other members are simulated and no real money moves. */
+  demo: boolean;
   members: PotMemberResponse[];
   /** Null until the pot starts. */
   round: RoundResponse | null;
