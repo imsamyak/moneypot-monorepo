@@ -23,7 +23,12 @@ import java.util.UUID;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "pots")
+@Table(
+   name = "pots",
+   uniqueConstraints = {
+      @UniqueConstraint(columnNames = {"invite_code"}, name = "uc_pots_invite_code")
+   }
+)
 public class Pot extends DomainEntity {
 
    /** A safety cap, not a rule of the game: every member gets a round, so a huge group would run for very long. */
@@ -71,7 +76,7 @@ public class Pot extends DomainEntity {
    @Column(name = "starts_at", nullable = false, updatable = false)
    private Instant startsAt;
 
-   /** What a member needs to join (the owner does not). Only the owner sees it. */
+   /** The code that finds this pot and lets a member join (the owner does not need it). Only the owner sees it. */
    @Column(name = "invite_code", nullable = false, updatable = false)
    private String inviteCode;
 

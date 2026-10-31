@@ -17,6 +17,8 @@ interface PotJpaRepository extends Repository<Pot, UUID> {
 
    Optional<Pot> findById(UUID id);
 
+   Optional<Pot> findByInviteCode(String inviteCode);
+
    @Lock(LockModeType.PESSIMISTIC_WRITE)
    @Query("SELECT p FROM Pot p WHERE p.id = :id")
    Optional<Pot> findByIdForUpdate(@Param("id") UUID id);

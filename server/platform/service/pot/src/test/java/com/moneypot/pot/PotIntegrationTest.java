@@ -588,6 +588,60 @@ class PotIntegrationTest {
       assertThat(call("POST", "/api/pots", "{}", null).status()).isEqualTo(401);
    }
 
+   // ------------------------------------------------------------------ joining with only the code
+
+   @Test
+   void theInviteCodeAloneJoinsThePot() throws Exception {
+      UUID owner = UUID.randomUUID();
+      UUID guest = UUID.randomUUID();
+      Created pot = createPot(owner);
+
+      Reply joined = as(guest, "POST", "/api/pots/join", "{\"inviteCode\":\"" + pot.code() + "\"}");
+
+      assertThat(joined.status()).isEqualTo(200);
+      assertThat(joined.body().path("id").asText()).isEqualTo(pot.id().toString());
+      assertThat(statusOf(owner, pot.id(), guest)).isEqualTo("PENDING");
+      assertThat(pending(pot.id(), "CONTRIBUTION")).hasSize(2);
+   }
+
+   @Test
+   void aWrongOrMissingCodeFindsNothing() throws Exception {
+      UUID guest = UUID.randomUUID();
+      createPot(UUID.randomUUID());
+
+      assertThat(as(guest, "POST", "/api/pots/join", "{\"inviteCode\":\"0000000000000000\"}").status()).isEqualTo(404);
+      assertThat(as(guest, "POST", "/api/pots/join", "{\"inviteCode\":\"\"}").status()).isEqualTo(400);
+      assertThat(as(guest, "GET", "/api/pots/invite/0000000000000000", null).status()).isEqualTo(404);
+   }
+
+   @Test
+   void theCodeShowsThePotBeforeJoiningAndNeverRevealsItselfToAnyoneButTheOwner() throws Exception {
+      UUID owner = UUID.randomUUID();
+      UUID guest = UUID.randomUUID();
+      Created pot = createPot(owner);
+
+      Reply preview = as(guest, "GET", "/api/pots/invite/" + pot.code(), null);
+
+      assertThat(preview.status()).isEqualTo(200);
+      assertThat(preview.body().path("name").asText()).isEqualTo("Friends");
+      assertThat(preview.body().path("contribution").asLong()).isEqualTo(CONTRIBUTION);
+      assertThat(preview.body().path("inviteCode").isNull()).isTrue();
+      assertThat(as(owner, "GET", "/api/pots/invite/" + pot.code(), null).body().path("inviteCode").asText()).isEqualTo(pot.code());
+   }
+
+   @Test
+   void aRefusedPaymentShowsOnThePreviewSoThePersonKnowsWhy() throws Exception {
+      UUID owner = UUID.randomUUID();
+      UUID poor = UUID.randomUUID();
+      Created pot = createPot(owner);
+      as(poor, "POST", "/api/pots/join", "{\"inviteCode\":\"" + pot.code() + "\"}");
+      JsonNode request = pending(pot.id(), "CONTRIBUTION").stream().filter(r -> r.path("userId").asText().equals(poor.toString())).findFirst().orElseThrow();
+
+      answer(request, false);
+
+      assertThat(as(poor, "GET", "/api/pots/invite/" + pot.code(), null).body().path("joinProblem").asText()).isEqualTo("Insufficient funds");
+   }
+
    // ------------------------------------------------------------------ live updates
 
    /** Opens the live connection of a pot with a ticket; what arrives is queued, and a close is reported. */

@@ -1,11 +1,13 @@
 package com.moneypot.pot.adapter.in.web.controller;
 
 import com.moneypot.pot.adapter.in.web.controller.dto.request.CreatePotRequest;
+import com.moneypot.pot.adapter.in.web.controller.dto.request.JoinByCodeRequest;
 import com.moneypot.pot.adapter.in.web.controller.dto.request.JoinPotRequest;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotListResponse;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotResponse;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.SocketTicketResponse;
 import com.moneypot.pot.port.in.usecase.CreatePotUseCase;
+import com.moneypot.pot.port.in.usecase.GetPotByInviteUseCase;
 import com.moneypot.pot.port.in.usecase.GetPotUseCase;
 import com.moneypot.pot.port.in.usecase.IssueSocketTicketUseCase;
 import com.moneypot.pot.port.in.usecase.JoinPotUseCase;
@@ -14,6 +16,7 @@ import com.moneypot.pot.port.in.usecase.ListPotsUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.IssueSocketTicketCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.JoinPotCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.LeavePotCmd;
+import com.moneypot.pot.port.in.usecase.dto.query.GetPotByInviteQuery;
 import com.moneypot.pot.port.in.usecase.dto.query.GetPotQuery;
 import com.moneypot.pot.port.in.usecase.dto.query.ListPotsQuery;
 import com.moneypot.security.Caller;
@@ -45,6 +48,7 @@ public class PotController {
    private final CreatePotUseCase createPotUseCase;
    private final ListPotsUseCase listPotsUseCase;
    private final GetPotUseCase getPotUseCase;
+   private final GetPotByInviteUseCase getPotByInviteUseCase;
    private final JoinPotUseCase joinPotUseCase;
    private final LeavePotUseCase leavePotUseCase;
    private final IssueSocketTicketUseCase issueSocketTicketUseCase;
@@ -67,7 +71,19 @@ public class PotController {
       return PotResponse.from(getPotUseCase.execute(new GetPotQuery(potId, Caller.userId())));
    }
 
-   /** Joins with the invite code and pays the contribution; possible until bidding starts. */
+   /** What the invite code opens: the pot, so the person sees what they would pay into before joining. */
+   @GetMapping("/invite/{inviteCode}")
+   public PotResponse byInvite(@PathVariable String inviteCode) {
+      return PotResponse.from(getPotByInviteUseCase.execute(new GetPotByInviteQuery(inviteCode, Caller.userId())));
+   }
+
+   /** Joins with just the invite code and pays the contribution; possible until bidding starts. */
+   @PostMapping("/join")
+   public PotResponse joinByCode(@Valid @RequestBody JoinByCodeRequest request) {
+      return PotResponse.from(joinPotUseCase.execute(new JoinPotCmd(null, Caller.userId(), request.inviteCode())).pot());
+   }
+
+   /** Joins this pot with its invite code and pays the contribution; possible until bidding starts. */
    @PostMapping("/{potId}/join")
    public PotResponse join(@PathVariable UUID potId, @RequestBody(required = false) JoinPotRequest request) {
       String code = request == null ? null : request.inviteCode();

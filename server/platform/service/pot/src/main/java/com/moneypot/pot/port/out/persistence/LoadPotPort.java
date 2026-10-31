@@ -11,6 +11,9 @@ public interface LoadPotPort {
 
    Optional<Pot> loadById(UUID potId);
 
+   /** The pot with this invite code. */
+   Optional<Pot> loadByInviteCode(String inviteCode);
+
    /** The pots this user is in (or is joining). */
    List<Pot> loadByMember(UUID userId);
 

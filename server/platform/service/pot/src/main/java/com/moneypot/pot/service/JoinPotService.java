@@ -4,6 +4,7 @@ import com.moneypot.pot.domain.entity.Pot;
 import com.moneypot.pot.domain.entity.PotMember;
 import com.moneypot.pot.domain.entity.Round;
 import com.moneypot.pot.domain.entity.TransferKind;
+import com.moneypot.pot.domain.exception.InviteNotFoundException;
 import com.moneypot.pot.domain.exception.PotNotFoundException;
 import com.moneypot.pot.port.in.usecase.JoinPotUseCase;
 import com.moneypot.pot.port.in.usecase.dto.command.JoinPotCmd;
@@ -11,6 +12,7 @@ import com.moneypot.pot.port.in.usecase.dto.result.PotChangeResult;
 import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadMemberPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
+import com.moneypot.pot.port.out.persistence.LoadPotPort;
 import com.moneypot.pot.port.out.persistence.LoadRoundPort;
 import com.moneypot.pot.port.out.persistence.SaveMemberPort;
 import com.moneypot.pot.service.support.PotAssembler;
@@ -26,6 +28,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Joins a pot by invitation, before bidding starts. The member is pending until the wallet confirms their contribution:
@@ -36,6 +39,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JoinPotService implements JoinPotUseCase {
 
+   private final LoadPotPort loadPotPort;
    private final LoadPotForUpdatePort loadPotForUpdatePort;
    private final LoadMemberPort loadMemberPort;
    private final SaveMemberPort saveMemberPort;
@@ -47,7 +51,9 @@ public class JoinPotService implements JoinPotUseCase {
    @Override
    @Transactional
    public PotChangeResult execute(JoinPotCmd cmd) {
-      Pot pot = loadPotForUpdatePort.loadByIdForUpdate(cmd.potId()).orElseThrow(() -> PotNotFoundException.of(cmd.potId()));
+      UUID potId = cmd.potId() != null ? cmd.potId() : loadPotPort.loadByInviteCode(cmd.inviteCode() == null ? "" : cmd.inviteCode())
+            .orElseThrow(InviteNotFoundException::of).getId();
+      Pot pot = loadPotForUpdatePort.loadByIdForUpdate(potId).orElseThrow(() -> PotNotFoundException.of(potId));
       if (!pot.joiningIsOpen(Instant.now())) {
          throw BusinessRuleException.of("Joining is closed: bidding has started");
       }

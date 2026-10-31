@@ -6,10 +6,10 @@ import java.util.UUID;
 
 /**
  * Joins a pot that has not started; the contribution is taken from the wallet at once. Everyone but the owner needs the
- * invite code.
+ * invite code, and the code alone is enough to find the pot: {@code potId} may be left out.
  */
 public record JoinPotCmd(
-      @NotNull UUID potId,
+      UUID potId,
       @NotNull UUID userId,
       String inviteCode
 ) {

@@ -28,6 +28,12 @@ public class PotPersistenceAdapter implements LoadPotPort, LoadPotForUpdatePort,
 
    @Override
    @Transactional(readOnly = true)
+   public Optional<Pot> loadByInviteCode(String inviteCode) {
+      return repository.findByInviteCode(inviteCode);
+   }
+
+   @Override
+   @Transactional(readOnly = true)
    public List<Pot> loadByMember(UUID userId) {
       return repository.findByMember(userId);
    }
