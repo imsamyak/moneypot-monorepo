@@ -74,7 +74,7 @@ export default async function PotPage({
               {live && <span className="live">Live</span>}
             </div>
             <h1 style={{ fontSize: '2rem', fontWeight: 850, lineHeight: 1.1 }}>{pot.name}</h1>
-            <p className="muted-on">{formatMoney(pot.contribution)} from each member. The lowest bid wins, and what is left is shared.</p>
+            <p className="muted-on">{formatMoney(pot.contribution)} from each member. The lowest bid collects the pot, and what is left is shared.</p>
             <div>
               <p className="muted-on">{open ? 'In the pot so far' : 'The pot'}</p>
               <p className="big-number">{formatMoney(pot.potAmount)}</p>
@@ -139,7 +139,7 @@ export default async function PotPage({
           Fewer than two members had joined by the start time, so this pot was cancelled and everyone was refunded.
         </p>
       )}
-      {pot.status === 'COMPLETED' && <p className="notice">Every member has won once. This pot is complete.</p>}
+      {pot.status === 'COMPLETED' && <p className="notice">Every member has collected once. This pot is complete.</p>}
 
       {pot.round && mine && pot.status === 'ACTIVE' && <PotRound pot={pot} round={pot.round} me={user.id} isOwner={isOwner} />}
       {pot.round && !mine && pot.status === 'ACTIVE' && (
@@ -161,7 +161,7 @@ export default async function PotPage({
               {open ? (
                 <span className={member.status === 'ACTIVE' ? 'chip' : 'chip chip-warn'}>{member.status === 'ACTIVE' ? 'Paid' : 'Paying...'}</span>
               ) : (
-                <span className={member.won ? 'chip' : 'chip chip-muted'}>{member.won ? `won round ${member.wonRound}` : 'has not won yet'}</span>
+                <span className={member.won ? 'chip' : 'chip chip-muted'}>{member.won ? `collected in round ${member.wonRound}` : 'yet to collect'}</span>
               )}
             </div>
           ))}

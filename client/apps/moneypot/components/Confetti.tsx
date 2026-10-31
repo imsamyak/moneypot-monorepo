@@ -1,4 +1,4 @@
-const COLORS = ['#fbbf24', '#2dd4bf', '#f472b6', '#60a5fa', '#a78bfa', '#fb7185'];
+const COLORS = ['#ffc439', '#009cde', '#0070ba', '#ffffff', '#7cc4ff', '#ff8a5c'];
 
 /** A burst of falling confetti behind a celebration. Pure CSS, positioned over the nearest relative parent. */
 export function Confetti({ pieces = 28 }: { pieces?: number }) {

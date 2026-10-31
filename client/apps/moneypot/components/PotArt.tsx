@@ -17,18 +17,18 @@ export function PotArt({ level = 0.5, size = 160 }: { level?: number; size?: num
         </clipPath>
         <linearGradient id={`${id}-body`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffffff" />
-          <stop offset="1" stopColor="#cdeee8" />
+          <stop offset="1" stopColor="#c7ddf2" />
         </linearGradient>
         <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fde68a" />
-          <stop offset="1" stopColor="#f59e0b" />
+          <stop offset="0" stopColor="#ffe08a" />
+          <stop offset="1" stopColor="#f5b800" />
         </linearGradient>
       </defs>
       <ellipse cx="100" cy="186" rx="62" ry="7" fill="rgba(0,0,0,0.18)" />
       <g>
-        <circle className="coin" cx="84" cy="30" r="11" fill="#fbbf24" stroke="#f59e0b" strokeWidth="3" />
-        <circle className="coin coin-2" cx="116" cy="26" r="11" fill="#fcd34d" stroke="#f59e0b" strokeWidth="3" />
-        <circle className="coin coin-3" cx="100" cy="22" r="11" fill="#fbbf24" stroke="#f59e0b" strokeWidth="3" />
+        <circle className="coin" cx="84" cy="30" r="11" fill="#ffc439" stroke="#d99a00" strokeWidth="3" />
+        <circle className="coin coin-2" cx="116" cy="26" r="11" fill="#ffd966" stroke="#d99a00" strokeWidth="3" />
+        <circle className="coin coin-3" cx="100" cy="22" r="11" fill="#ffc439" stroke="#d99a00" strokeWidth="3" />
       </g>
       <path d="M38 92h124l-9 66a24 24 0 0 1-24 21H71a24 24 0 0 1-24-21L38 92Z" fill={`url(#${id}-body)`} />
       <g clipPath={`url(#${id}-clip)`}>

@@ -22,7 +22,7 @@ export default async function PotsPage() {
             </h1>
             <p className="muted-on">Pots are by invitation. Create one and share its code, or enter a code you were given.</p>
           </div>
-          <Link href="/pots/new" className="btn btn-white btn-lg"><Icon name="plus" size={18} /> Create a pot</Link>
+          <Link href="/pots/new" className="btn btn-gold btn-lg"><Icon name="plus" size={18} /> Create a pot</Link>
         </div>
       </section>
 

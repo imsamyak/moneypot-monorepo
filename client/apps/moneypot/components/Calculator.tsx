@@ -32,7 +32,7 @@ export function Calculator() {
           </div>
         </div>
         <div>
-          <label className="label" htmlFor="calc-bid">The winning bid: <strong>{percent}%</strong> of the pot</label>
+          <label className="label" htmlFor="calc-bid">The lowest bid: <strong>{percent}%</strong> of the pot</label>
           <input id="calc-bid" type="range" min={50} max={100} value={percent} onChange={(e) => setPercent(Number(e.target.value))} />
           <p className="muted small">The lower someone is willing to go, the more is left for the group.</p>
         </div>
@@ -44,20 +44,20 @@ export function Calculator() {
           <p className="big-number">{formatMoney(pot)}</p>
         </div>
         <div className="split-bar" aria-hidden="true">
-          <div style={{ width: `${percent}%`, background: '#fbbf24' }} />
-          <div style={{ width: `${100 - percent}%`, background: '#5eead4' }} />
+          <div style={{ width: `${percent}%`, background: '#ffc439' }} />
+          <div style={{ width: `${100 - percent}%`, background: '#7cc4ff' }} />
         </div>
         <div className="between">
           <div>
-            <p className="eyebrow" style={{ color: '#fde68a' }}>Winner gets</p>
+            <p className="eyebrow" style={{ color: '#ffe08a' }}>Collector gets</p>
             <p style={{ fontSize: '1.4rem', fontWeight: 800 }}>{formatMoney(bid)}</p>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p className="eyebrow" style={{ color: '#99f6e4' }}>Each of the other {members - 1}</p>
+            <p className="eyebrow" style={{ color: '#bfe0ff' }}>Each of the other {members - 1}</p>
             <p style={{ fontSize: '1.4rem', fontWeight: 800 }}>+{formatMoney(share)}</p>
           </div>
         </div>
-        <p className="muted-on small">After {members} rounds everyone has won once, and everyone has also been paid a share nine times out of ten.</p>
+        <p className="muted-on small">After {members} rounds everyone has collected once, and in every other round they got a share of what the collector left.</p>
       </div>
     </div>
   );

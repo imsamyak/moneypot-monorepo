@@ -9,8 +9,8 @@ import { getUser } from '@/lib/session';
 const STEPS: { icon: IconName; title: string; text: string }[] = [
   { icon: 'users', title: 'Invite your group', text: 'Create a pot, choose when bidding starts, and share the private invite code. There is no limit on members.' },
   { icon: 'wallet', title: 'Pay to join', text: 'Your contribution goes in when you join. Until bidding starts you can still leave and get it back.' },
-  { icon: 'gavel', title: 'Bid for the pot', text: 'At the start time joining closes and bidding opens. Members who have not won yet say what they will accept. The lowest bid wins.' },
-  { icon: 'gift', title: 'Share the rest', text: 'What the winner leaves goes back to everyone else, straight to their wallets.' },
+  { icon: 'gavel', title: 'Bid for the pot', text: 'At the start time joining closes and bidding opens. Members who have not collected yet say the least they will accept. The lowest bid collects the pot.' },
+  { icon: 'gift', title: 'Share the rest', text: 'What the collector leaves behind goes back to everyone else, straight to their wallets.' },
 ];
 
 export default async function Home() {
@@ -21,11 +21,11 @@ export default async function Home() {
         <div className="stack">
           <span className="chip" style={{ justifySelf: 'start' }}><Icon name="bolt" size={14} /> Save together</span>
           <h1 className="hero-title">
-            Bid for the pot. <span className="gradient-text">Lowest bid wins.</span>
+            Bid for the pot. <span className="gradient-text">Lowest bid collects.</span>
           </h1>
           <p className="muted" style={{ fontSize: '1.15rem', maxWidth: '34rem' }}>
-            A modern kameti, by invitation only. Friends join with a private code and pay in, bidding opens at a time you set,
-            and whatever the winner leaves behind is shared with everyone else.
+            Save with people you trust. Start a pot, invite friends with a private code, and everyone pays in. When bidding opens,
+            whoever will settle for the least collects the pot, and the difference is shared back with the rest of the group.
           </p>
           <div className="cluster">
             <Link href="/register" className="btn btn-primary btn-lg">Create an account</Link>
@@ -54,14 +54,14 @@ export default async function Home() {
               <div key={bid.order} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '0.7rem' }}>
                 <Avatar order={bid.order} size={30} />
                 <div className="track" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                  <div className="track-fill" style={{ width: `${bid.width}%`, background: bid.lead ? '#fbbf24' : 'rgba(255,255,255,0.75)' }} />
+                  <div className="track-fill" style={{ width: `${bid.width}%`, background: bid.lead ? '#ffc439' : 'rgba(255,255,255,0.75)' }} />
                 </div>
                 <strong>{bid.amount}</strong>
               </div>
             ))}
           </div>
           <p className="muted-on small" style={{ marginTop: '0.9rem' }}>
-            Member 4 leads and would win ₹41,000. The other ₹9,000 would be shared by the nine others.
+            Member 4 leads and would collect ₹41,000. The other ₹9,000 would be shared by the nine others.
           </p>
         </div>
       </section>
@@ -96,7 +96,7 @@ export default async function Home() {
       <section className="hero-card cta-band">
         <h2 style={{ fontSize: '2rem', fontWeight: 850 }}>Ready to start a pot?</h2>
         <p className="muted-on" style={{ margin: '0.5rem 0 1.4rem' }}>Create one in a minute, then send your friends the code.</p>
-        <Link href="/register" className="btn btn-white btn-lg">Get started free</Link>
+        <Link href="/register" className="btn btn-gold btn-lg">Get started free</Link>
       </section>
     </div>
   );
