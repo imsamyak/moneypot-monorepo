@@ -1,5 +1,5 @@
 import { useCase } from '@moneypot/sdk-core';
-import { createPotBody, joinPotBody, placeBidBody, potParams } from './schemas.js';
+import { createPotBody, inviteParams, joinByCodeBody, joinPotBody, placeBidBody, potParams } from './schemas.js';
 import type { PotListResponse, PotResponse, SocketTicketResponse } from './types.js';
 
 export type * from './types.js';
@@ -29,7 +29,25 @@ export const getPot = useCase('GetPot')
   .authRequired()
   .build();
 
-/** Joins with the invite code and pays the contribution. Possible until the pot's start time. */
+/** What an invite code opens: the pot, so the person sees what they would pay into before joining. */
+export const getPotByInvite = useCase('GetPotByInvite')
+  .service('pot')
+  .get('/api/pots/invite/{inviteCode}')
+  .params(inviteParams)
+  .returns<PotResponse>()
+  .authRequired()
+  .build();
+
+/** Joins with just the invite code and pays the contribution. Possible until the pot's start time. */
+export const joinPotByCode = useCase('JoinPotByCode')
+  .service('pot')
+  .post('/api/pots/join')
+  .body(joinByCodeBody)
+  .returns<PotResponse>()
+  .authRequired()
+  .build();
+
+/** Joins this pot with its invite code and pays the contribution. Possible until the pot's start time. */
 export const joinPot = useCase('JoinPot')
   .service('pot')
   .post('/api/pots/{potId}/join')
@@ -89,6 +107,8 @@ export const potUseCases = [
   createPot,
   listPots,
   getPot,
+  getPotByInvite,
+  joinPotByCode,
   joinPot,
   leavePot,
   payContribution,

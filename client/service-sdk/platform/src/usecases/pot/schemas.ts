@@ -18,7 +18,11 @@ export const createPotBody = z.strictObject({
   bidWindowSeconds: z.number().int().min(10).max(604_800).optional(),
 });
 
-/** The code from the invitation link; the owner does not need one. */
+/** The invite code: it alone finds the pot. */
+export const inviteParams = z.strictObject({ inviteCode: requiredText(64) });
+export const joinByCodeBody = z.strictObject({ inviteCode: requiredText(64) });
+
+/** The code for joining a specific pot; the owner does not need one. */
 export const joinPotBody = z.strictObject({ inviteCode: requiredText(64).optional() });
 
 export const placeBidBody = z.strictObject({ amount: z.number().int().positive() });
