@@ -3,8 +3,7 @@
 /* ------------------------------------------------------------------ tokens */
 :root {
   --bg: #f5f7fa;
-  --bg-glow: radial-gradient(46rem 24rem at 90% -10%, #d6e9f8 0%, transparent 62%),
-    radial-gradient(34rem 20rem at -8% 4%, #fff0c2 0%, transparent 58%);
+  --bg-glow: radial-gradient(60rem 22rem at 50% -12%, #e1eefa 0%, transparent 70%);
   --ink: #2c2e2f;
   --muted: #5f6d77;
   --line: #d4dbe1;
@@ -23,32 +22,8 @@
   --hero: linear-gradient(135deg, #003087 0%, #0049a8 48%, #0070ba 100%);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #061326;
-    --bg-glow: radial-gradient(46rem 24rem at 90% -10%, #0c2f66 0%, transparent 62%),
-      radial-gradient(34rem 20rem at -8% 4%, #3a2d08 0%, transparent 58%);
-    --ink: #e8eff8;
-    --muted: #93a8c2;
-    --line: #1c3459;
-    --card: #0b1f3d;
-    --card-2: #11294d;
-    --brand: #4da3ff;
-    --brand-2: #7cc4ff;
-    --brand-ink: #b9d8ff;
-    --brand-soft: #0f2f5c;
-    --on-brand: #04142e;
-    --gold: #ffc439;
-    --gold-soft: #3a2d08;
-    --bad: #ff8a85;
-    --bad-soft: #3b1a1a;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 30px -12px rgba(0, 0, 0, 0.6);
-    --hero: linear-gradient(135deg, #001f5c 0%, #0a4aa6 55%, #0f6fc5 100%);
-  }
-}
-
 html {
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 body {
@@ -145,7 +120,7 @@ body {
   .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; font-weight: 700; color: var(--muted); }
   .big-number { font-size: clamp(2rem, 6vw, 2.9rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; }
   .section-title { font-size: 1.15rem; font-weight: 800; }
-  .gradient-text { background: linear-gradient(120deg, var(--brand) 0%, var(--brand-2) 55%, #ffc439 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .gradient-text { background: linear-gradient(120deg, var(--brand-ink) 0%, var(--brand) 50%, var(--brand-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
   /* ---------------------------------------------------------------- controls */
   .btn {
