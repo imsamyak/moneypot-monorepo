@@ -4,9 +4,8 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-/** @param mineOnly true for the pots the user belongs to; false for the pots still open to join */
+/** The pots a user belongs to. Pots are by invitation only, so there is no list of other pots. */
 public record ListPotsQuery(
-      @NotNull UUID userId,
-      boolean mineOnly
+      @NotNull UUID userId
 ) {
 }

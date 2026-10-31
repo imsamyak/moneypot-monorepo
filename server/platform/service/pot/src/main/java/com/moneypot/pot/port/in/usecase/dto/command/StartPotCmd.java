@@ -4,9 +4,8 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-/** Closes joining and starts round 1. Only the owner can do it, and only when the pot is full. */
+/** The bidding start time of a pot has come: close joining and start round 1 (or cancel it when too few joined). */
 public record StartPotCmd(
-      @NotNull UUID potId,
-      @NotNull UUID userId
+      @NotNull UUID potId
 ) {
 }

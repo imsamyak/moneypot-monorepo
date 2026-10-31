@@ -6,5 +6,7 @@ public enum TransferKind {
    /** The pot pays the winner the winning bid. */
    PAYOUT,
    /** The pot gives a member a share of what the winner left. */
-   DIVIDEND
+   DIVIDEND,
+   /** The pot gives a member their contribution back (they left, or the pot was cancelled). */
+   REFUND
 }

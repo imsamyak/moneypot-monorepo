@@ -1,5 +1,6 @@
 package com.moneypot.pot.port.in.usecase.dto.result;
 
+import com.moneypot.pot.domain.entity.MemberStatus;
 import com.moneypot.pot.domain.entity.PotStatus;
 import com.moneypot.pot.domain.entity.RoundStatus;
 import com.moneypot.pot.domain.entity.TransferKind;
@@ -13,8 +14,13 @@ import java.util.UUID;
 /**
  * A pot with its members and its running round. Money is in paise.
  *
- * @param round   null until the pot starts
- * @param history the rounds that are over, with who won and what they were paid
+ * @param memberCount the members who have paid (before bidding starts), or the group that started
+ * @param potAmount   what a round pays out: every member contributes once
+ * @param startsAt    when joining closes and bidding begins
+ * @param inviteCode  what a member needs to join; only the owner gets it, others see null
+ * @param joinProblem why the viewer is not in, when their payment was refused (for example "Insufficient funds"); else null
+ * @param round       null until bidding starts
+ * @param history     the rounds that are over, with who won and what they were paid
  */
 public record PotResult(
       UUID id,
@@ -28,6 +34,9 @@ public record PotResult(
       int minBidPercent,
       int bidWindowSeconds,
       int currentRound,
+      Instant startsAt,
+      String inviteCode,
+      String joinProblem,
       List<Member> members,
       RoundView round,
       List<Past> history
@@ -38,7 +47,7 @@ public record PotResult(
       history = history == null ? List.of() : List.copyOf(history);
    }
 
-   public record Member(UUID userId, int joinOrder, boolean won, Integer wonRound) {
+   public record Member(UUID userId, int joinOrder, MemberStatus status, boolean won, Integer wonRound) {
    }
 
    /**

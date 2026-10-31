@@ -5,5 +5,7 @@ public enum TransferStatus {
    REQUESTED,
    DONE,
    /** The wallet could not do it (for example the balance was too low). */
-   REJECTED
+   REJECTED,
+   /** No longer matters: a join payment that failed, or a contribution that was refunded. */
+   VOID
 }

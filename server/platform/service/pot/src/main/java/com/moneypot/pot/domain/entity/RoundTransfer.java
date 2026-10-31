@@ -64,6 +64,10 @@ public class RoundTransfer extends DomainEntity {
       return status == TransferStatus.REQUESTED;
    }
 
+   public boolean isVoid() {
+      return status == TransferStatus.VOID;
+   }
+
    public void markDone() {
       this.status = TransferStatus.DONE;
       this.reason = null;
@@ -71,6 +75,12 @@ public class RoundTransfer extends DomainEntity {
 
    public void markRejected(String reason) {
       this.status = TransferStatus.REJECTED;
+      this.reason = reason;
+   }
+
+   /** This transfer no longer counts: a join payment that failed, or a contribution that was given back. */
+   public void markVoid(String reason) {
+      this.status = TransferStatus.VOID;
       this.reason = reason;
    }
 

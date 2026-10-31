@@ -8,12 +8,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
- * A savings pot: a fixed group of members who each pay the same contribution every round. In a round the members
- * who have not won yet bid for the money and the lowest bid wins; what the winner leaves is shared among the other
- * members. Every member wins exactly once, so a pot of N members runs N rounds. Money is in paise.
+ * A savings pot. People join by invitation and pay their contribution when they join. At the bidding start time joining
+ * closes and the members who paid are the group: in each round they pay in, the members who have not won yet bid, and
+ * the lowest bid wins; what the winner leaves is shared among the others. Every member wins exactly once, so a pot of N
+ * members runs N rounds. Until bidding starts a member can leave and get their money back; after that nobody can.
+ * Money is in paise.
  */
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,12 +26,14 @@ import java.util.UUID;
 @Table(name = "pots")
 public class Pot extends DomainEntity {
 
-   public static final int MIN_MEMBERS = 2;
-   public static final int MAX_MEMBERS = 50;
+   /** A safety cap, not a rule of the game: every member gets a round, so a huge group would run for very long. */
+   public static final int MAX_MEMBERS = 100;
+   public static final int MIN_MEMBERS_TO_START = 2;
    public static final long MIN_CONTRIBUTION = 100L;
    public static final long MAX_CONTRIBUTION = 5_000_000L;
    public static final int MIN_BID_WINDOW_SECONDS = 10;
    public static final int MAX_BID_WINDOW_SECONDS = 604_800;
+   public static final Duration MAX_TIME_UNTIL_START = Duration.ofDays(90);
 
    @Id
    private UUID id;
@@ -38,7 +44,8 @@ public class Pot extends DomainEntity {
    @Column(name = "owner_id", nullable = false, updatable = false)
    private UUID ownerId;
 
-   @Column(name = "member_count", nullable = false, updatable = false)
+   /** The members who paid when bidding started; 0 until then. */
+   @Column(name = "member_count", nullable = false)
    private int memberCount;
 
    /** What each member pays every round. */
@@ -56,20 +63,25 @@ public class Pot extends DomainEntity {
    @Column(name = "status", nullable = false)
    private PotStatus status;
 
-   /** The number of the running round; 0 until the pot starts. */
+   /** The number of the running round; 0 until bidding starts. */
    @Column(name = "current_round", nullable = false)
    private int currentRound;
 
-   public static Pot create(UUID ownerId, String name, int memberCount, long contribution, int minBidPercent,
-                            int bidWindowSeconds) {
+   /** When joining closes and the first round of bidding begins. */
+   @Column(name = "starts_at", nullable = false, updatable = false)
+   private Instant startsAt;
+
+   /** What a member needs to join (the owner does not). Only the owner sees it. */
+   @Column(name = "invite_code", nullable = false, updatable = false)
+   private String inviteCode;
+
+   public static Pot create(UUID ownerId, String name, long contribution, int minBidPercent, int bidWindowSeconds,
+                            Instant startsAt, Instant now) {
       if (ownerId == null) {
          throw BusinessRuleException.of("A pot needs an owner");
       }
       if (name == null || name.isBlank() || name.length() > 60) {
          throw BusinessRuleException.of("The name must be 1 to 60 characters");
-      }
-      if (memberCount < MIN_MEMBERS || memberCount > MAX_MEMBERS) {
-         throw BusinessRuleException.of("A pot has " + MIN_MEMBERS + " to " + MAX_MEMBERS + " members");
       }
       if (contribution < MIN_CONTRIBUTION || contribution > MAX_CONTRIBUTION) {
          throw BusinessRuleException.of("The contribution must be between Rs 1 and Rs 50,000");
@@ -80,18 +92,33 @@ public class Pot extends DomainEntity {
       if (bidWindowSeconds < MIN_BID_WINDOW_SECONDS || bidWindowSeconds > MAX_BID_WINDOW_SECONDS) {
          throw BusinessRuleException.of("Bidding stays open for 10 seconds to 7 days");
       }
-      return new Pot(UUID.randomUUID(), name.trim(), ownerId, memberCount, contribution, minBidPercent,
-            bidWindowSeconds, PotStatus.OPEN, 0);
+      if (startsAt == null || !startsAt.isAfter(now)) {
+         throw BusinessRuleException.of("Bidding must start in the future");
+      }
+      if (startsAt.isAfter(now.plus(MAX_TIME_UNTIL_START))) {
+         throw BusinessRuleException.of("Bidding can start at most 90 days from now");
+      }
+      String inviteCode = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+      return new Pot(UUID.randomUUID(), name.trim(), ownerId, 0, contribution, minBidPercent, bidWindowSeconds,
+            PotStatus.OPEN, 0, startsAt, inviteCode);
    }
 
-   /** What a round pays out in total: every member contributes once. */
+   /** What a round pays out in total with this many members: every member contributes once. */
+   public long potAmountFor(int members) {
+      return members * contribution;
+   }
+
+   /** The lowest bid a member may place with this many members (rounded up, so never below the percentage asked for). */
+   public long minBidFor(int members) {
+      return Math.ceilDiv(potAmountFor(members) * minBidPercent, 100L);
+   }
+
    public long potAmount() {
-      return memberCount * contribution;
+      return potAmountFor(memberCount);
    }
 
-   /** The lowest bid a member may place (rounded up, so the floor is never below the percentage asked for). */
    public long minBid() {
-      return Math.ceilDiv(potAmount() * minBidPercent, 100L);
+      return minBidFor(memberCount);
    }
 
    public boolean isOpen() {
@@ -102,13 +129,34 @@ public class Pot extends DomainEntity {
       return status == PotStatus.ACTIVE;
    }
 
-   /** Closes joining and begins round 1. */
-   public void start() {
+   /** Joining and leaving are possible only while the pot is open and the bidding start time has not come. */
+   public boolean joiningIsOpen(Instant now) {
+      return isOpen() && now.isBefore(startsAt);
+   }
+
+   public boolean startTimeHasCome(Instant now) {
+      return !now.isBefore(startsAt);
+   }
+
+   /** Closes joining: these {@code members} (who paid) are the group, and round 1 begins. */
+   public void start(int members) {
       if (!isOpen()) {
          throw BusinessRuleException.of("The pot has already started");
       }
+      if (members < MIN_MEMBERS_TO_START) {
+         throw BusinessRuleException.of("A pot needs at least " + MIN_MEMBERS_TO_START + " members to start");
+      }
       status = PotStatus.ACTIVE;
+      memberCount = members;
       currentRound = 1;
+   }
+
+   /** Too few members joined by the start time. */
+   public void cancel() {
+      if (!isOpen()) {
+         throw BusinessRuleException.of("Only a pot that has not started can be cancelled");
+      }
+      status = PotStatus.CANCELLED;
    }
 
    public void nextRound() {
