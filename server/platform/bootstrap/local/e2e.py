@@ -1,7 +1,7 @@
 # Runs a whole pot through the real services: identity 9086, wallet 9081, pot 9082.
 # Start the containers and the three services first (see the README), then: python e2e.py
 #
-# The story: Asha creates a pot that starts in a few seconds. Bala and Chitra join with the invite link and pay.
+# The story: Asha creates a pot that starts in a few seconds. Bala and Chitra join with just the invite code and pay.
 # Dev joins, then leaves and gets a full refund. Bidding starts by itself at the start time, nobody can join or leave
 # any more, and three rounds run to the end.
 import json
@@ -78,13 +78,18 @@ def get_pot(token=a_token):
     return call('GET', POT + '/pots/%s' % pot_id, token=token)[1]
 
 
-# joining needs the invitation, and takes the contribution
+# the code alone opens the pot (so a person sees what they would pay) and joins it, taking the contribution
+status, body = call('POST', POT + '/pots/join', {'inviteCode': '0000000000000000'}, b_token)
+assert status == 404, (status, body)
+print('a wrong code finds nothing (404)')
+status, preview = call('GET', POT + '/pots/invite/%s' % code, token=b_token)
+assert status == 200 and preview['name'] == 'Friends' and preview['inviteCode'] is None, (status, preview)
+print('the code shows the pot:', preview['name'], preview['contribution'], 'paise each')
 status, body = call('POST', POT + '/pots/%s/join' % pot_id, {'inviteCode': 'wrong'}, b_token)
 assert status == 403, (status, body)
-print('without the right code: refused (403)')
 for token in (b_token, c_token, d_token):
-    status, body = call('POST', POT + '/pots/%s/join' % pot_id, {'inviteCode': code}, token)
-    assert status == 200, (status, body)
+    status, body = call('POST', POT + '/pots/join', {'inviteCode': code}, token)
+    assert status == 200 and body['id'] == pot_id, (status, body)
 wait_for('everyone paid', lambda: sum(1 for m in get_pot()['members'] if m['status'] == 'ACTIVE') == 4)
 print('balances after joining (A, B, C, D):', [balance(t) for t in (a_token, b_token, c_token, d_token)])
 assert [balance(t) for t in (a_token, b_token, c_token, d_token)] == [400000] * 4
@@ -101,7 +106,7 @@ wait_for('bidding to start', lambda: get_pot()['status'] == 'ACTIVE' and get_pot
 started = get_pot()
 print('bidding started: members', started['memberCount'], 'pot', started['potAmount'], 'lowest bid allowed', started['minBid'])
 assert started['memberCount'] == 3 and started['potAmount'] == 300000
-assert call('POST', POT + '/pots/%s/join' % pot_id, {'inviteCode': code}, d_token)[0] == 422  # joining is closed
+assert call('POST', POT + '/pots/join', {'inviteCode': code}, d_token)[0] == 422  # joining is closed
 assert call('POST', POT + '/pots/%s/leave' % pot_id, token=b_token)[0] == 422  # and nobody can leave
 
 # round 1

@@ -3,8 +3,8 @@
 A savings-pot (kameti) platform, by invitation only.
 
 1. Someone **creates a pot**: how much each member pays, how long each round of bidding stays open, and **when bidding
-   starts**. There is no limit on members. They get a private invite link.
-2. People **join with the link and pay their contribution when they join**. Until bidding starts they can **leave and get
+   starts**. There is no limit on members. They get a private **invite code**.
+2. People **join with just that code and pay their contribution when they join**. Until bidding starts they can **leave and get
    it all back**.
 3. At the start time **joining closes** (nobody can join or leave from then on) and whoever has paid is the group.
    Bidding opens straight away. If fewer than two members paid, the pot is cancelled and everyone is refunded.
