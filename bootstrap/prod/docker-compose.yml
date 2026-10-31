@@ -1,0 +1,128 @@
+# MoneyPot on one server: Postgres, RabbitMQ, the three services, the web app and nginx in front.
+# Only nginx (port 80) is reachable from outside; the services talk to each other on the compose network.
+# deploy.sh builds the jars and the web app, uploads this folder, and runs `docker compose up -d --build`.
+name: moneypot
+
+x-java: &java
+  build:
+    context: .
+    dockerfile: Dockerfile.java
+  restart: unless-stopped
+  environment: &java-env
+    SPRING_PROFILES_ACTIVE: local
+    JAVA_TOOL_OPTIONS: -Xmx320m -XX:+UseSerialGC
+    SPRING_DATASOURCE_USERNAME: moneypot
+    SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    RABBITMQ_HOST: rabbitmq
+    RABBITMQ_PORT: 5672
+    RABBITMQ_USERNAME: moneypot
+    RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    IDENTITY_JWKS_URI: http://identity:9086/api/.well-known/jwks.json
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moneypot
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: identity_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moneypot -d identity_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:4.1
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: moneypot
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+
+  identity:
+    <<: *java
+    build:
+      context: .
+      dockerfile: Dockerfile.java
+      args: { JAR: jars/identity.jar }
+    environment:
+      <<: *java-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/identity_db
+      IDENTITY_DEV_KEY_FILE: /data/identity-jwt-private.pem
+    volumes:
+      - identity-keys:/data
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  wallet:
+    <<: *java
+    build:
+      context: .
+      dockerfile: Dockerfile.java
+      args: { JAR: jars/wallet.jar }
+    environment:
+      <<: *java-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wallet_db
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      identity: { condition: service_started }
+
+  pot:
+    <<: *java
+    build:
+      context: .
+      dockerfile: Dockerfile.java
+      args: { JAR: jars/pot.jar }
+    environment:
+      <<: *java-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pot_db
+      POT_WEBSOCKET_ALLOWED_ORIGINS: http://${PUBLIC_HOST}
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      identity: { condition: service_started }
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    restart: unless-stopped
+    environment:
+      MONEYPOT_IDENTITY_URL: http://identity:9086
+      MONEYPOT_WALLET_URL: http://wallet:9081
+      MONEYPOT_POT_URL: http://pot:9082
+      MONEYPOT_POT_WS_URL: ws://${PUBLIC_HOST}
+      COOKIE_SECURE: "false"
+    depends_on:
+      - identity
+      - wallet
+      - pot
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+      - pot
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+  identity-keys:

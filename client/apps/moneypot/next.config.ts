@@ -5,6 +5,8 @@ import type { NextConfig } from 'next';
 const workspaceRoot = path.join(__dirname, '../../..');
 
 const nextConfig: NextConfig = {
+  // a self-contained server for the Docker image (bootstrap/prod)
+  output: 'standalone',
   // keep the repository free of generated agent files
   agentRules: false,
   turbopack: { root: workspaceRoot },

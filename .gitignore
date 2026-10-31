@@ -12,3 +12,6 @@ dist/
 # the development server: its address, and the ssh key
 bootstrap/dev/deploy.config.json
 *.pem
+
+# local build output
+build/
