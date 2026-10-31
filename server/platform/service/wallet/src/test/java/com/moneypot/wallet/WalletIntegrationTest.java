@@ -191,4 +191,20 @@ class WalletIntegrationTest {
       assertThat(ledger.body().path("items").get(0).path("balanceAfter").asLong()).isEqualTo(300_000);
       assertThat(ledger.body().path("items").get(1).path("kind").asText()).isEqualTo("DEPOSIT");
    }
+
+   @Test
+   void aRefundGivesTheContributionBackAndAnsweredTheSameWay() throws Exception {
+      UUID user = UUID.randomUUID();
+      UUID pot = newPot();
+      deposit(user, 800_000);
+      requestTransfer(pot, UUID.randomUUID(), "contribution-refund", "CONTRIBUTION", user, 500_000);
+
+      requestTransfer(pot, UUID.randomUUID(), "refund-1", "REFUND", user, 500_000);
+
+      assertThat(balanceOf(user)).isEqualTo(800_000);
+      assertThat(potBalance(pot)).isZero();
+      assertThat(answers("refund-1", "transfer-completed")).isEqualTo(1);
+      Reply ledger = call("GET", "/api/wallet/ledger?page=0&size=10", null, TestTokens.member(user));
+      assertThat(ledger.body().path("items").get(0).path("kind").asText()).isEqualTo("REFUND");
+   }
 }

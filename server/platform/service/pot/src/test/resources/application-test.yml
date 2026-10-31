@@ -15,5 +15,7 @@ outbox:
     enabled: false
 
 pot:
+  start:
+    enabled: false
   settlement:
     enabled: false

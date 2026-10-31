@@ -18,6 +18,10 @@ outbox:
     lease-seconds: 30
 
 pot:
+  start:
+    # Closes joining and starts the bidding of every pot whose start time has come.
+    enabled: true
+    interval-ms: 5000
   settlement:
     enabled: true
     interval-ms: 5000
