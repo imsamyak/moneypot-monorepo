@@ -6,6 +6,7 @@ import com.moneypot.pot.adapter.in.web.controller.dto.request.JoinPotRequest;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotListResponse;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.PotResponse;
 import com.moneypot.pot.adapter.in.web.controller.dto.response.SocketTicketResponse;
+import com.moneypot.pot.port.in.usecase.CreateDemoPotUseCase;
 import com.moneypot.pot.port.in.usecase.CreatePotUseCase;
 import com.moneypot.pot.port.in.usecase.GetPotByInviteUseCase;
 import com.moneypot.pot.port.in.usecase.GetPotUseCase;
@@ -13,6 +14,7 @@ import com.moneypot.pot.port.in.usecase.IssueSocketTicketUseCase;
 import com.moneypot.pot.port.in.usecase.JoinPotUseCase;
 import com.moneypot.pot.port.in.usecase.LeavePotUseCase;
 import com.moneypot.pot.port.in.usecase.ListPotsUseCase;
+import com.moneypot.pot.port.in.usecase.dto.command.CreateDemoPotCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.IssueSocketTicketCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.JoinPotCmd;
 import com.moneypot.pot.port.in.usecase.dto.command.LeavePotCmd;
@@ -46,6 +48,7 @@ import java.util.UUID;
 public class PotController {
 
    private final CreatePotUseCase createPotUseCase;
+   private final CreateDemoPotUseCase createDemoPotUseCase;
    private final ListPotsUseCase listPotsUseCase;
    private final GetPotUseCase getPotUseCase;
    private final GetPotByInviteUseCase getPotByInviteUseCase;
@@ -58,6 +61,13 @@ public class PotController {
    @ResponseStatus(HttpStatus.CREATED)
    public PotResponse create(@Valid @RequestBody CreatePotRequest request) {
       return PotResponse.from(createPotUseCase.execute(request.toCommand(Caller.userId())).pot());
+   }
+
+   /** A practice pot with simulated members and play money, so a new member can try the whole game alone. */
+   @PostMapping("/demo")
+   @ResponseStatus(HttpStatus.CREATED)
+   public PotResponse createDemo() {
+      return PotResponse.from(createDemoPotUseCase.execute(new CreateDemoPotCmd(Caller.userId())));
    }
 
    /** The pots the caller is in. */

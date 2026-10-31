@@ -18,6 +18,7 @@ import java.util.UUID;
  * @param potAmount   what a round pays out: every member contributes once
  * @param startsAt    when joining closes and bidding begins
  * @param inviteCode  what a member needs to join; only the owner gets it, others see null
+ * @param demo        a practice pot with simulated members and play money
  * @param joinProblem why the viewer is not in, when their payment was refused (for example "Insufficient funds"); else null
  * @param round       null until bidding starts
  * @param history     the rounds that are over, with who won and what they were paid
@@ -37,6 +38,7 @@ public record PotResult(
       Instant startsAt,
       String inviteCode,
       String joinProblem,
+      boolean demo,
       List<Member> members,
       RoundView round,
       List<Past> history

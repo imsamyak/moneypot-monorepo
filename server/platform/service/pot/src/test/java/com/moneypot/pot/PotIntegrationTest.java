@@ -642,6 +642,66 @@ class PotIntegrationTest {
       assertThat(as(poor, "GET", "/api/pots/invite/" + pot.code(), null).body().path("joinProblem").asText()).isEqualTo("Insufficient funds");
    }
 
+   // ------------------------------------------------------------------ the demo pot
+
+   @Test
+   void aDemoPotStartsAtOnceWithSimulatedMembersWhoHaveAlreadyBid() throws Exception {
+      UUID user = UUID.randomUUID();
+
+      Reply created = as(user, "POST", "/api/pots/demo", null);
+
+      assertThat(created.status()).isEqualTo(201);
+      JsonNode demo = created.body();
+      assertThat(demo.path("demo").asBoolean()).isTrue();
+      assertThat(demo.path("status").asText()).isEqualTo("ACTIVE");
+      assertThat(demo.path("memberCount").asInt()).isEqualTo(5);
+      assertThat(demo.path("potAmount").asLong()).isEqualTo(500_000);
+      assertThat(demo.path("round").path("status").asText()).isEqualTo("BIDDING");
+      assertThat(demo.path("round").path("bids")).hasSize(4);
+      assertThat(as(user, "GET", "/api/pots", null).body().path("items")).hasSize(1);
+   }
+
+   @Test
+   void aDemoPotCanBePlayedToTheEndAloneWithoutAnyWalletMoney() throws Exception {
+      UUID user = UUID.randomUUID();
+      JsonNode demo = as(user, "POST", "/api/pots/demo", null).body();
+      UUID pot = UUID.fromString(demo.path("id").asText());
+
+      // round 1: the member bids the lowest allowed and collects the pot
+      assertThat(as(user, "POST", "/api/pots/" + pot + "/bids", "{\"amount\":" + demo.path("minBid").asLong() + "}").status()).isEqualTo(200);
+      assertThat(as(user, "POST", "/api/pots/" + pot + "/settle", null).status()).isEqualTo(200);
+      JsonNode afterRound1 = pot(user, pot);
+      assertThat(afterRound1.path("history")).hasSize(1);
+      assertThat(afterRound1.path("history").get(0).path("winnerId").asText()).isEqualTo(user.toString());
+      assertThat(afterRound1.path("history").get(0).path("payout").asLong()).isEqualTo(demo.path("minBid").asLong());
+      assertThat(afterRound1.path("currentRound").asInt()).isEqualTo(2);
+      assertThat(afterRound1.path("round").path("status").asText()).isEqualTo("BIDDING");
+      assertThat(afterRound1.path("round").path("bids")).hasSize(4); // the four simulated members bid again
+
+      // the member cannot collect again, and the other members take their turns
+      assertThat(as(user, "POST", "/api/pots/" + pot + "/bids", "{\"amount\":450000}").status()).isEqualTo(422);
+      for (int round = 2; round <= 4; round++) {
+         assertThat(as(user, "POST", "/api/pots/" + pot + "/settle", null).status()).isEqualTo(200);
+      }
+
+      JsonNode finished = pot(user, pot);
+      assertThat(finished.path("status").asText()).isEqualTo("COMPLETED");
+      assertThat(finished.path("history")).hasSize(5);
+      assertThat(finished.path("members")).allSatisfy(member -> assertThat(member.path("won").asBoolean()).isTrue());
+      // no money was asked of the wallet at any point
+      assertThat(jdbc.queryForObject("select count(*) from outbox_events where aggregate_id = ?", Integer.class, pot.toString())).isZero();
+   }
+
+   @Test
+   void everyDemoPotIsItsOwnGame() throws Exception {
+      UUID user = UUID.randomUUID();
+
+      as(user, "POST", "/api/pots/demo", null);
+      as(user, "POST", "/api/pots/demo", null);
+
+      assertThat(as(user, "GET", "/api/pots", null).body().path("items")).hasSize(2);
+   }
+
    // ------------------------------------------------------------------ live updates
 
    /** Opens the live connection of a pot with a ticket; what arrives is queued, and a close is reported. */

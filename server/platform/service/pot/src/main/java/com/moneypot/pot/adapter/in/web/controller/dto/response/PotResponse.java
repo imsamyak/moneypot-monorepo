@@ -30,6 +30,7 @@ public record PotResponse(
       Instant startsAt,
       String inviteCode,
       String joinProblem,
+      boolean demo,
       List<Member> members,
       Round round,
       List<Past> history
@@ -56,7 +57,7 @@ public record PotResponse(
       return new PotResponse(
             pot.id(), pot.name(), pot.ownerId(), pot.status(), pot.memberCount(), pot.contribution(), pot.potAmount(),
             pot.minBid(), pot.minBidPercent(), pot.bidWindowSeconds(), pot.currentRound(), pot.startsAt(),
-            pot.inviteCode(), pot.joinProblem(),
+            pot.inviteCode(), pot.joinProblem(), pot.demo(),
             pot.members().stream().map(m -> new Member(m.userId(), m.joinOrder(), m.status(), m.won(), m.wonRound())).toList(),
             round == null ? null : new Round(round.id(), round.number(), round.status(), round.biddingEndsAt(),
                   round.winnerId(), round.payout(),

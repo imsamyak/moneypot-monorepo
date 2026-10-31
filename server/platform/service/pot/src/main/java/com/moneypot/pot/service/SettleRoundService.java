@@ -12,6 +12,7 @@ import com.moneypot.pot.port.out.notification.NotifyPotChangedPort;
 import com.moneypot.pot.port.out.persistence.LoadMemberPort;
 import com.moneypot.pot.port.out.persistence.LoadPotForUpdatePort;
 import com.moneypot.pot.port.out.persistence.LoadRoundPort;
+import com.moneypot.pot.service.support.DemoSupport;
 import com.moneypot.pot.service.support.PotAssembler;
 import com.moneypot.pot.service.support.RoundSupport;
 import com.moneypot.pot.service.support.TransferEvents;
@@ -28,8 +29,9 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Ends the bidding: the lowest bid wins, and the wallet is asked to pay the winner and to give the other members their
- * dividend. Normally the scheduler does this when the bidding time is over; the owner or an admin can do it sooner.
+ * Ends the bidding: the lowest bid collects the pot, and the wallet is asked to pay the collector and to give the other
+ * members their dividend. Normally the scheduler does this when the bidding time is over; the owner or an admin can do it
+ * sooner. In a demo pot nothing goes to the wallet: the round is paid out at once and the next one opens.
  */
 @Service
 @Validated
@@ -40,8 +42,9 @@ public class SettleRoundService implements SettleRoundUseCase {
    private final LoadRoundPort loadRoundPort;
    private final LoadMemberPort loadMemberPort;
    private final RoundSupport roundSupport;
-   private final PotAssembler potAssembler;
+   private final DemoSupport demoSupport;
    private final NotifyPotChangedPort notifyPotChangedPort;
+   private final PotAssembler potAssembler;
 
    @Override
    @Transactional
@@ -50,15 +53,20 @@ public class SettleRoundService implements SettleRoundUseCase {
       if (cmd.early()) {
          OwnershipGuard.requireUserOr(pot.getOwnerId(), UserRole.ROLE_ADMIN);
       }
+      Instant now = Instant.now();
       Round round = loadRoundPort.loadByPotIdAndNumber(pot.getId(), pot.getCurrentRound())
             .filter(r -> pot.isActive() && r.getStatus() == RoundStatus.BIDDING)
             .orElseThrow(() -> BusinessRuleException.of("There is no bidding to settle"));
-      if (!cmd.early() && !round.biddingHasEnded(Instant.now())) {
+      if (!cmd.early() && !round.biddingHasEnded(now)) {
          throw BusinessRuleException.of("Bidding is still open");
       }
 
-      List<PotChangeResult.TransferRequest> requests =
-            roundSupport.settle(pot, round, loadMemberPort.loadByPotId(pot.getId()).stream().filter(PotMember::isActive).toList());
+      List<PotMember> group = loadMemberPort.loadByPotId(pot.getId()).stream().filter(PotMember::isActive).toList();
+      List<PotChangeResult.TransferRequest> requests = roundSupport.settle(pot, round, group);
+      if (pot.isDemo()) {
+         demoSupport.payOutAndAdvance(pot, round, group, now);
+         requests = List.of();
+      }
       notifyPotChangedPort.potChanged(pot.getId());
       return new PotChangeResult(potAssembler.assemble(pot, null), requests);
    }

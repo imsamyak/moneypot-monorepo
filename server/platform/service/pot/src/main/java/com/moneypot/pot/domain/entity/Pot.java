@@ -80,6 +80,10 @@ public class Pot extends DomainEntity {
    @Column(name = "invite_code", nullable = false, updatable = false)
    private String inviteCode;
 
+   /** A practice pot: the other members are simulated and no real money moves. */
+   @Column(name = "demo", nullable = false, updatable = false, columnDefinition = "boolean not null default false")
+   private boolean demo;
+
    public static Pot create(UUID ownerId, String name, long contribution, int minBidPercent, int bidWindowSeconds,
                             Instant startsAt, Instant now) {
       if (ownerId == null) {
@@ -105,7 +109,14 @@ public class Pot extends DomainEntity {
       }
       String inviteCode = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
       return new Pot(UUID.randomUUID(), name.trim(), ownerId, 0, contribution, minBidPercent, bidWindowSeconds,
-            PotStatus.OPEN, 0, startsAt, inviteCode);
+            PotStatus.OPEN, 0, startsAt, inviteCode, false);
+   }
+
+   /** A practice pot for someone who wants to try the game alone: it starts at once, with simulated members. */
+   public static Pot createDemo(UUID ownerId, long contribution, int minBidPercent, int bidWindowSeconds, Instant now) {
+      String inviteCode = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+      return new Pot(UUID.randomUUID(), "Demo pot", ownerId, 0, contribution, minBidPercent, bidWindowSeconds,
+            PotStatus.OPEN, 0, now, inviteCode, true);
    }
 
    /** What a round pays out in total with this many members: every member contributes once. */

@@ -58,6 +58,7 @@ public class PotAssembler {
             pot.getCurrentRound(), pot.getStartsAt(),
             viewerId != null && viewerId.equals(pot.getOwnerId()) ? pot.getInviteCode() : null,
             viewerId != null && !viewerIsMember ? joinProblem(pot, viewerId) : null,
+            pot.isDemo(),
             members.stream().map(m -> new PotResult.Member(m.getUserId(), m.getJoinOrder(), m.getStatus(), m.isWon(), m.getWonRound())).toList(),
             round, history);
    }
